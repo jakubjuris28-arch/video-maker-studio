@@ -384,7 +384,8 @@ def build_xmind(path, title, num_keys, ending, meta, images,
                 product_name="The Method",
                 funnel_channel="Divine Manifestation",
                 signature="- Unknown Author",
-                product_fallback="★ {PRODUCT} ★\n→ link in description."):
+                product_fallback="★ {PRODUCT} ★\n→ link in description.",
+                anchor="my word is my wand"):
     """Write a valid .xmind zip in the LOCKED reference style.
 
     images: dict {index -> png_bytes} for keys that got an image.
@@ -397,7 +398,7 @@ def build_xmind(path, title, num_keys, ending, meta, images,
     # ---- meta pieces ----
     premise = _lines(meta.get("premise"), "[premise unavailable]")
     affirmation = _lines(meta.get("affirmation"),
-                         "[affirmation unavailable, ends 'my word is my wand']")
+                         f"[affirmation unavailable, ends '{anchor}']")
     aff_title = (meta.get("affirmation_title") or "THE AFFIRMATION").upper()
     cta = meta.get("cta", "")
     keys = meta.get("keys", []) or []
@@ -552,11 +553,28 @@ def compute_stats(script):
     }
 
 
+FALLBACK_IMAGE_STYLE = (
+    'A cinematic spiritual teaching illustration, 16:9, deep black background with a '
+    'soft warm vignette, high production quality. Everything rendered in rich warm '
+    'gold with a gentle glow, elegant and uncluttered. Central visual: {concept}, '
+    'rendered as a clear meaningful visual metaphor in gleaming gold. '
+    'A single short gold caption line at the bottom summarizing the idea. '
+    'Warm gold on black, cinematic and meaningful, lots of dark space, calm and '
+    'never crowded with text. Do NOT write the words "master key" anywhere in the image.'
+)
+
+
 def extract_image_prompts_from_script(script):
-    """Fallback if the meta step fails: pull the [IMAGE: ...] cue text as prompts."""
+    """Fallback if the meta step fails: pull each [IMAGE: ...] cue, strip the
+    'MASTER KEY N - ...' label, and wrap the concept in the full locked style
+    so fallback images still match the channel look."""
     out = []
     for m in re.findall(r"\[IMAGE:\s*(.*?)\]", script):
-        out.append(m.strip())
+        concept = m.strip()
+        # strip "MASTER KEY N - gold-on-black diagram:" style prefixes
+        concept = re.sub(r"(?i)^master\s+key\s+\d+\s*[-–:]\s*", "", concept)
+        concept = re.sub(r"(?i)^gold-on-black\s+diagram\s*:\s*", "", concept)
+        out.append(FALLBACK_IMAGE_STYLE.format(concept=concept.strip()))
     return out
 
 
@@ -635,6 +653,7 @@ def run_pipeline(job_id, p, job, output_root):
         job.update(stage="Extracting image prompts + mindmap data...", progress=30)
         meta = None
         last_err = None
+        meta_raw = None
         for attempt in range(3):   # the model occasionally emits invalid JSON; retry
             try:
                 meta_raw = call_anthropic(cfg, model, author["meta_system"], build_meta_user(p, script), 8000)
@@ -642,8 +661,21 @@ def run_pipeline(job_id, p, job, output_root):
                 break
             except Exception as e:
                 last_err = e
+        if meta is None and meta_raw:
+            # final resort: ask the model to REPAIR the broken JSON it produced
+            try:
+                fixed = call_anthropic(
+                    cfg, model,
+                    "You repair broken JSON. Escape all inner double quotes, remove "
+                    "trailing commas, and return ONLY the corrected, valid JSON object. "
+                    "No commentary, no fences.",
+                    meta_raw, 8000)
+                meta = parse_json_loose(fixed)
+                job["warnings"].append("Meta JSON needed a repair pass (fixed automatically).")
+            except Exception as e:
+                last_err = e
         if meta is None:
-            job["warnings"].append(f"Meta JSON step failed after 3 tries, script kept: {last_err}")
+            job["warnings"].append(f"Meta JSON step failed after retries + repair, script kept: {last_err}")
 
         # figure out the prompts we'll feed to KeyAI
         prompts = []
@@ -693,7 +725,8 @@ def run_pipeline(job_id, p, job, output_root):
         build_xmind(xmind_path, title, p["num_keys"], p["ending"], meta, images,
                     product_name=p["product_name"], funnel_channel=p["funnel_channel"],
                     signature=author["signature"],
-                    product_fallback=author["product_pitch_fallback"])
+                    product_fallback=author["product_pitch_fallback"],
+                    anchor=author.get("anchor", ""))
 
         # ---------- 5. finish ----------
         # show only the script and the mindmap on the page; the prompts file
