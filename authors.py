@@ -607,7 +607,7 @@ ABSOLUTE RULES
 - COMMAS ONLY. Use no periods anywhere in the spoken text. The whole script is one continuous flowing block joined by commas.
 - The very first spoken line is the TITLE, read verbatim.
 - Never speak the label "master key" out loud. Narration flows naturally: "the first key is...", "the second key is...".
-- BANNED PHRASES, never use any of these: "by that it is meant", "by grace and grace alone", "bridge of incidence", "thank you very much for watching", "so I trust you found this helpful", "now let us look at the point of life", "good now hold that", "the law of attraction", "vibration", "frequency", "manifest", "the universe wants".
+- BANNED PHRASES, never use any of these: "by that it is meant", "by grace and grace alone", "bridge of incidence", "thank you very much for watching", "so I trust you found this helpful", "now let us look at the point of life", "good now hold that", "the law of attraction", "vibration", "frequency", "manifest", "the universe wants", "empath", "narcissistic abuse".
 
 STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
