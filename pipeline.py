@@ -104,7 +104,7 @@ def parse_json_loose(text):
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 
 
-def call_anthropic(cfg, model, system, user_content, max_tokens):
+def call_anthropic(cfg, model, system, user_content, max_tokens, strict=False):
     key = cfg.get("ANTHROPIC_API_KEY")
     if not key:
         raise RuntimeError("ANTHROPIC_API_KEY missing from .env")
@@ -127,7 +127,13 @@ def call_anthropic(cfg, model, system, user_content, max_tokens):
     for block in data.get("content", []):
         if block.get("type") == "text":
             parts.append(block.get("text", ""))
-    return "".join(parts).strip()
+    text = "".join(parts).strip()
+    if strict and data.get("stop_reason") == "max_tokens":
+        # signal truncation so callers can retry with more room instead of
+        # trying to parse a cut-off response
+        raise RuntimeError(f"response truncated at max_tokens={max_tokens}; "
+                           f"got {len(text)} chars")
+    return text
 
 
 # --------------------------------------------------------------------------
@@ -656,8 +662,11 @@ def run_pipeline(job_id, p, job, output_root):
         meta_raw = None
         for attempt in range(3):   # the model occasionally emits invalid JSON; retry
             try:
-                meta_raw = call_anthropic(cfg, model, author["meta_system"], build_meta_user(p, script), 8000)
-                meta = parse_json_loose(meta_raw)
+                meta_raw = call_anthropic(cfg, model, author["meta_system"], build_meta_user(p, script), 16000, strict=True)
+                candidate = parse_json_loose(meta_raw)
+                if len(candidate.get("keys") or []) != p["num_keys"]:
+                    raise ValueError(f"meta returned {len(candidate.get('keys') or [])} keys, expected {p['num_keys']}")
+                meta = candidate
                 break
             except Exception as e:
                 last_err = e
@@ -669,9 +678,14 @@ def run_pipeline(job_id, p, job, output_root):
                     "You repair broken JSON. Escape all inner double quotes, remove "
                     "trailing commas, and return ONLY the corrected, valid JSON object. "
                     "No commentary, no fences.",
-                    meta_raw, 8000)
-                meta = parse_json_loose(fixed)
-                job["warnings"].append("Meta JSON needed a repair pass (fixed automatically).")
+                    meta_raw, 16000)
+                candidate = parse_json_loose(fixed)
+                if len(candidate.get("keys") or []) == p["num_keys"]:
+                    meta = candidate
+                    job["warnings"].append("Meta JSON needed a repair pass (fixed automatically).")
+                else:
+                    job["warnings"].append("Repair pass produced incomplete keys; using best available data.")
+                    meta = candidate  # partial is still better than skeleton
             except Exception as e:
                 last_err = e
         if meta is None:
