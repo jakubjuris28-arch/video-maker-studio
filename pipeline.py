@@ -186,9 +186,10 @@ def build_script_user(p):
     lines.append(f"Number of keys: {p['num_keys']}.")
     lines.append(f"Comment CTA (two words): {p['cta']}.")
     if p.get("scripture"):
-        lines.append(f"Scripture premise to use: {p['scripture']}.")
+        lines.append(f"Premise to use: {p['scripture']}.")
     else:
-        lines.append("Scripture premise: none given, pick a fresh, fitting Bible verse yourself.")
+        hint = AUTHORS[p["author"]]["premise_hint"]
+        lines.append(f"Premise: none given, pick a fresh, fitting one yourself ({hint}).")
     if p.get("core"):
         lines.append(f"Core sentence/phrase this video teaches: {p['core']}.")
     if p.get("extra"):
