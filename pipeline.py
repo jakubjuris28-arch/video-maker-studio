@@ -183,6 +183,27 @@ def build_script_user(p):
 # --------------------------------------------------------------------------
 # The meta step (second Anthropic call) -> strict JSON
 # --------------------------------------------------------------------------
+def _check_meta_lengths(m):
+    """Reject meta output that overshoots the locked V37/V38/V39 text budget
+    (key body: 4 short sentences <=280 chars; stepping back <=500 chars) so the
+    retry loop regenerates it instead of producing an overcrowded mindmap."""
+    for i, k in enumerate(m.get("keys") or [], 1):
+        body = k.get("body") or []
+        if isinstance(body, str):
+            body = [body]
+        if len(body) > 4:
+            raise ValueError(f"key {i} body has {len(body)} sentences, max 4")
+        joined = " ".join(str(s) for s in body)
+        if len(joined) > 400:
+            raise ValueError(f"key {i} body is {len(joined)} chars, budget ~280 (hard cap 400)")
+    sb = m.get("stepping_back") or []
+    if isinstance(sb, str):
+        sb = [sb]
+    sb_joined = " ".join(str(s) for s in sb)
+    if len(sb) > 7 or len(sb_joined) > 650:
+        raise ValueError(f"stepping_back is {len(sb)} lines / {len(sb_joined)} chars, budget 4-6 lines / ~500 chars")
+
+
 META_SYSTEM = """You extract a structured mindmap + image-prompt package from a finished video script.
 Return ONLY valid JSON. No markdown fences, no prose, no trailing commentary.
 
@@ -195,12 +216,12 @@ The JSON object must have exactly these fields:
   "keys": [
     {
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
-      "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 full sentences that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each roughly 12-22 words, using the script's OWN words closely (near-verbatim key phrases), not vague summaries"],
+      "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
-  "stepping_back": ["short recap line", "..."],
+  "stepping_back": ["4-6 SHORT recap lines for the whole video, total under 500 characters. Do NOT write one full sentence per key - compress: each line is a tight clause, and one line may fold two keys together (semicolons welcome). It reads as one flowing 'here is the whole picture' paragraph, like: 'one anchor is enough in a crisis; your supply was never money but God'"],
   "closing": ["ONLY the final closing lines that tie back to the title; do NOT include the affirmation or any product/channel pitch - those are added separately"],
   "product_pitch": "(only if the video ends with a product pitch) reformat the script's closing pitch as: 1-2 short lead-in lines about why the product is needed, then a blank line, then a line '★ <PRODUCT NAME IN CAPS> ★', then 2-3 '→ ...' bullet lines including any price / refund / 'link in description', with real line breaks. Empty string otherwise."
 }
@@ -666,6 +687,7 @@ def run_pipeline(job_id, p, job, output_root):
                 candidate = parse_json_loose(meta_raw)
                 if len(candidate.get("keys") or []) != p["num_keys"]:
                     raise ValueError(f"meta returned {len(candidate.get('keys') or [])} keys, expected {p['num_keys']}")
+                _check_meta_lengths(candidate)
                 meta = candidate
                 break
             except Exception as e:
