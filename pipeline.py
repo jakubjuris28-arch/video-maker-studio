@@ -119,9 +119,25 @@ def call_anthropic(cfg, model, system, user_content, max_tokens, strict=False):
         "system": system,
         "messages": [{"role": "user", "content": user_content}],
     }
-    resp = requests.post(ANTHROPIC_URL, headers=headers, json=body, timeout=600)
-    if resp.status_code != 200:
-        raise RuntimeError(f"Anthropic API {resp.status_code}: {resp.text[:500]}")
+    # transient errors (overload, rate limit, gateway) shouldn't kill the whole
+    # job - retry with backoff before giving up
+    last_err = None
+    for attempt in range(4):
+        if attempt:
+            time.sleep(min(5 * 2 ** attempt, 60))
+        try:
+            resp = requests.post(ANTHROPIC_URL, headers=headers, json=body, timeout=600)
+        except requests.RequestException as e:
+            last_err = RuntimeError(f"Anthropic API connection error: {e}")
+            continue
+        if resp.status_code in (429, 500, 502, 503, 504, 529):
+            last_err = RuntimeError(f"Anthropic API {resp.status_code}: {resp.text[:500]}")
+            continue
+        if resp.status_code != 200:
+            raise RuntimeError(f"Anthropic API {resp.status_code}: {resp.text[:500]}")
+        break
+    else:
+        raise last_err
     data = resp.json()
     parts = []
     for block in data.get("content", []):
