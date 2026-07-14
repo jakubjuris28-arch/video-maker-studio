@@ -179,6 +179,66 @@ def build_expand_user(p, script, current_chars):
     )
 
 
+# --------------------------------------------------------------------------
+# per-author generation history -> anti-repetition context for the next video
+# --------------------------------------------------------------------------
+HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "output", "_history.json")
+
+
+def _load_history():
+    try:
+        with open(HISTORY_PATH, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {}
+
+
+def remember_run(author, title, meta):
+    """Store the distinguishing parts of a finished video so the next
+    generation can be told not to repeat them."""
+    if not meta:
+        return
+    try:
+        entry = {
+            "title": title,
+            "premise": " ".join(str(meta.get("premise", "")).split())[:160],
+            "affirmation": " ".join(str(meta.get("affirmation", "")).split())[:100],
+            "keys": [str(k.get("title", ""))[:90] for k in (meta.get("keys") or [])],
+        }
+        hist = _load_history()
+        hist.setdefault(author, [])
+        hist[author] = (hist[author] + [entry])[-12:]   # keep the last 12 runs
+        os.makedirs(os.path.dirname(HISTORY_PATH), exist_ok=True)
+        with open(HISTORY_PATH, "w", encoding="utf-8") as fh:
+            json.dump(hist, fh, ensure_ascii=False, indent=1)
+    except Exception:
+        pass   # history is best-effort; never break a job over it
+
+
+def variety_context(author):
+    """A DO-NOT-REPEAT block built from this author's recent videos."""
+    entries = _load_history().get(author, [])
+    if not entries:
+        return ""
+    recent = entries[-8:]
+    premises = [e["premise"] for e in recent if e.get("premise")]
+    keys = [k for e in recent for k in e.get("keys", []) if k]
+    affs = [e["affirmation"] for e in recent if e.get("affirmation")]
+    block = ["", "VARIETY (critical - this channel publishes daily and repeat "
+                 "viewers notice): previous videos already used the material "
+                 "below. Do NOT reuse it. Choose a DIFFERENT premise quote, "
+                 "different key angles, different stories and examples, and a "
+                 "differently-worded affirmation (same required ending)."]
+    if premises:
+        block.append("Recently used premises: " + " | ".join(premises[-6:]))
+    if keys:
+        block.append("Recently used key headlines: " + " | ".join(keys[-30:]))
+    if affs:
+        block.append("Recently used affirmation openings: " + " | ".join(affs[-4:]))
+    return "\n".join(block)[:2600]
+
+
 def build_script_user(p):
     lines = [f"TITLE: {p['title']}"]
     lines.append(f"Target length: about {p['target_chars']} characters "
@@ -194,6 +254,9 @@ def build_script_user(p):
         lines.append(f"Core sentence/phrase this video teaches: {p['core']}.")
     if p.get("extra"):
         lines.append(f"Extra instructions: {p['extra']}.")
+    vc = variety_context(p["author"])
+    if vc:
+        lines.append(vc)
     lines.append("\nWrite the full script now, following the locked format exactly.")
     return "\n".join(lines)
 
@@ -896,6 +959,8 @@ def run_pipeline(job_id, p, job, output_root):
                 except Exception as e2:
                     job["warnings"].append(
                         f"Length compression incomplete ({e2}); using best available text.")
+
+        remember_run(p["author"], title, meta)
 
         # figure out the prompts we'll feed to KeyAI
         prompts = []
