@@ -189,7 +189,15 @@ function fail(msg){
 }
 
 async function checkStatus(jobId){
-  const r = await fetch('/status/'+jobId);
+  let r;
+  try { r = await fetch('/status/'+jobId); }
+  catch(e){ return; /* transient network blip - keep polling */ }
+  if (r.status === 404){
+    clearInterval(poll);
+    fail('This job was lost (the server restarted mid-run, e.g. during an app update). ' +
+         'Please click Generate again - the new run will complete normally.');
+    return;
+  }
   const j = await r.json();
   document.getElementById('stage').textContent = j.stage || '';
   document.getElementById('fill').style.width = (j.progress||0)+'%';
