@@ -168,7 +168,7 @@ def build_expand_user(p, script, current_chars):
         f"to reach that target.\n\n"
         f"HOW to lengthen: deepen every key with more teaching, more concrete relatable "
         f"everyday examples, and more restatement of " + p.get("author_display","the author") + "'s principles. "
-        f"The later keys especially should be full 5 to 6 minute teachings.\n\n"
+        f"The later keys especially should be full, deep teachings - there is no upper limit on them.\n\n"
         f"KEEP EVERYTHING ELSE IDENTICAL: the same title as the first spoken line, the same "
         f"order and structure, the same [IMAGE: MASTER KEY N ...] cue before each key, the "
         f"[long_pause] markers, commas only and no periods, the same affirmation, and the "
@@ -218,6 +218,28 @@ def _check_meta_lengths(m):
     sb_joined = " ".join(str(s) for s in sb)
     if len(sb) > 7 or len(sb_joined) > 650:
         raise ValueError(f"stepping_back is {len(sb)} lines / {len(sb_joined)} chars, budget 4-6 lines / ~500 chars")
+
+
+def compress_meta(cfg, model, meta):
+    """Shrink over-budget mindmap text (key bodies / stepping back) without
+    regenerating or changing anything else."""
+    system = (
+        "You compress text fields inside a JSON object WITHOUT changing its "
+        "structure, meaning, or any other field. Required edits:\n"
+        "- every keys[i].body: keep EXACTLY 4 strings - the same 4 ideas in the "
+        "same order and near the same wording, each tightened to ~8-14 words, the "
+        "whole body under 240 characters total.\n"
+        "- stepping_back: 4-6 short lines, under 500 characters total (fold keys "
+        "together; semicolons welcome).\n"
+        "Every other field stays byte-identical. Inside string values use only "
+        "single quotes, never double quotes. Return ONLY the full corrected JSON object."
+    )
+    raw = call_anthropic(cfg, model, system,
+                         json.dumps(meta, ensure_ascii=False), 16000, strict=True)
+    fixed = parse_json_loose(raw)
+    if len(fixed.get("keys") or []) != len(meta.get("keys") or []):
+        raise ValueError("compress pass changed the key count")
+    return fixed
 
 
 META_SYSTEM = """You extract a structured mindmap + image-prompt package from a finished video script.
@@ -596,6 +618,70 @@ def compute_stats(script):
     }
 
 
+def key_budgets(target_chars, num_keys):
+    """Keys 1-3 have locked sizes (2, 3, 4 minutes at ~850 chars/min).
+    Keys 4+ have no per-key rule - they share the rest of the target evenly,
+    purely as an expansion floor so the TOTAL lands on target_chars."""
+    fixed = [1700, 2550, 3400][:min(3, num_keys)]
+    rest = num_keys - len(fixed)
+    if rest <= 0:
+        return fixed[:num_keys]
+    overhead = 3500  # premise + affirmation + recap + ending block
+    pool = max(target_chars - overhead - sum(fixed), rest * 800)
+    return fixed + [int(pool / rest)] * rest
+
+
+KEY_CUE_RE = re.compile(r"\[IMAGE:\s*MASTER\s+KEY\s+(\d+)", re.I)
+RECAP_RE = re.compile(r"here is the whole picture", re.I)
+
+
+def spoken_len(text):
+    return len(re.sub(r"\[[^\]]*\]", "", text).strip())
+
+
+def split_key_sections(script, num_keys):
+    """Split the script into (head, [key sections], tail). Each key section
+    starts at its [IMAGE: MASTER KEY N ...] cue and runs to the next cue;
+    the last one ends where the recap paragraph begins. Returns None if the
+    script doesn't have exactly num_keys cues + a recap (caller falls back)."""
+    cues = list(KEY_CUE_RE.finditer(script))
+    if len(cues) != num_keys:
+        return None
+    m = RECAP_RE.search(script, cues[-1].end())
+    if not m:
+        return None
+    tail_start = script.rfind("\n", cues[-1].end(), m.start())
+    tail_start = m.start() if tail_start == -1 else tail_start + 1
+    head = script[:cues[0].start()]
+    sections = []
+    for i, c in enumerate(cues):
+        end = cues[i + 1].start() if i + 1 < len(cues) else tail_start
+        sections.append(script[c.start():end])
+    return head, sections, script[tail_start:]
+
+
+def build_expand_key_user(p, script, key_num, section, budget, exact=False):
+    if exact:
+        size_rule = (f"it has a LOCKED length of about {budget} characters "
+                     f"(~{round(budget / 850, 1)} minutes) - reach it, but do not run far past it")
+    else:
+        size_rule = (f"it must be at least {budget} characters "
+                     f"(~{round(budget / 850, 1)} minutes of speaking), longer is fine")
+    return (
+        f"Below is the full finished script. Key {key_num} is only "
+        f"{spoken_len(section)} characters of spoken text, but {size_rule}.\n\n"
+        f"Rewrite ONLY key {key_num}, making it LONGER and deeper: more teaching, a "
+        f"concrete relatable everyday story, the same idea restated from new angles - "
+        f"never filler, never a new topic, and do NOT drift into the other keys' points.\n\n"
+        f"KEEP THE LOCKED FORMAT: start your output with this key's "
+        f"[IMAGE: MASTER KEY {key_num} ...] cue line exactly as it is, keep the same key "
+        f"heading wording, commas only and no periods, keep [long_pause] markers, and end "
+        f"where the key ends (do NOT include the next key, the recap, or the ending).\n\n"
+        f"Return ONLY the rewritten key {key_num} section, nothing else.\n\n"
+        f"FULL SCRIPT:\n{script}"
+    )
+
+
 FALLBACK_IMAGE_STYLE = (
     'A cinematic spiritual teaching illustration, 16:9, deep black background with a '
     'soft warm vignette, high production quality. Everything rendered in rich warm '
@@ -655,8 +741,51 @@ def run_pipeline(job_id, p, job, output_root):
         script = call_anthropic(cfg, model, system, build_script_user(p), max_tokens)
         stats = compute_stats(script)
 
-        # auto-expand: models undershoot long targets, so if the script is short
-        # we rewrite it longer (up to 2 passes) until it reaches ~92% of target.
+        # per-key expansion: one-pass generation stalls well under long targets,
+        # so every key gets its own escalating budget (2/3/4 then 5-6 min) and
+        # any key that falls short is rewritten ALONE until it fills its budget.
+        if stats["spoken_chars"] < 0.92 * target:
+            parts = split_key_sections(script, p["num_keys"])
+            if parts:
+                head, sections, tail = parts
+                budgets = key_budgets(target, p["num_keys"])
+                n_fixed = min(3, p["num_keys"])  # keys with a locked minute size
+                for i in range(p["num_keys"]):
+                    n = i + 1
+                    # keys 4+ have no rule of their own - only grow them while
+                    # the total is still under the requested length
+                    if i >= n_fixed and compute_stats(script)["spoken_chars"] >= 0.92 * target:
+                        break
+                    for attempt in range(2):
+                        have = spoken_len(sections[i])
+                        if have >= 0.9 * budgets[i]:
+                            break
+                        job.update(
+                            stage=f"Expanding key {n} ({have}/{budgets[i]} chars)...",
+                            progress=10 + int(40 * (i + attempt / 2) / p["num_keys"]))
+                        try:
+                            bigger = call_anthropic(
+                                cfg, model, system,
+                                build_expand_key_user(p, script, n, sections[i],
+                                                      budgets[i], exact=i < n_fixed),
+                                min(int(budgets[i] / 2.2) + 1000, 9000)).strip()
+                        except Exception as e:
+                            job["warnings"].append(f"Key {n} expand failed: {e}")
+                            break
+                        # accept only a valid, longer replacement for THIS key
+                        mm = KEY_CUE_RE.search(bigger)
+                        if (mm and int(mm.group(1)) == n
+                                and len(KEY_CUE_RE.findall(bigger)) == 1
+                                and spoken_len(bigger) > spoken_len(sections[i]) + 200):
+                            sections[i] = bigger.rstrip() + "\n\n"
+                            script = head + "".join(sections) + tail
+                stats = compute_stats(script)
+            else:
+                job["warnings"].append(
+                    "Couldn't split the script into keys for per-key expansion; "
+                    "falling back to whole-script expansion.")
+
+        # legacy whole-script expansion as a final nudge if still short
         tries = 0
         while stats["spoken_chars"] < 0.92 * target and tries < 2:
             tries += 1
@@ -703,7 +832,6 @@ def run_pipeline(job_id, p, job, output_root):
                 candidate = parse_json_loose(meta_raw)
                 if len(candidate.get("keys") or []) != p["num_keys"]:
                     raise ValueError(f"meta returned {len(candidate.get('keys') or [])} keys, expected {p['num_keys']}")
-                _check_meta_lengths(candidate)
                 meta = candidate
                 break
             except Exception as e:
@@ -728,6 +856,24 @@ def run_pipeline(job_id, p, job, output_root):
                 last_err = e
         if meta is None:
             job["warnings"].append(f"Meta JSON step failed after retries + repair, script kept: {last_err}")
+
+        # length budget: if the mindmap text overshoots the locked V37-V39 style
+        # (key bodies / stepping back too long), COMPRESS it instead of
+        # regenerating - this also covers the repair path, which used to skip
+        # the length check entirely
+        if meta is not None:
+            try:
+                _check_meta_lengths(meta)
+            except ValueError:
+                job.update(stage="Mindmap text over the locked budget, compressing...", progress=45)
+                try:
+                    meta = compress_meta(cfg, model, meta)
+                    _check_meta_lengths(meta)
+                    job["warnings"].append(
+                        "Mindmap text was over the locked length budget; compressed automatically.")
+                except Exception as e2:
+                    job["warnings"].append(
+                        f"Length compression incomplete ({e2}); using best available text.")
 
         # figure out the prompts we'll feed to KeyAI
         prompts = []

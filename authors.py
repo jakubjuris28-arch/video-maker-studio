@@ -35,7 +35,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words, quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh three-part affirmation that ALWAYS ends with "my word is my wand". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -49,7 +49,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Florence Scovel Shinn's principles until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
@@ -129,7 +129,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Neville read it, quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part assumption that ALWAYS ends with "imagination creates my reality". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -143,7 +143,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Neville Goddard's principles until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
@@ -226,7 +226,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Murphy read it (as a law of mind), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part decree that ALWAYS ends with "my subconscious brings it to pass". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -240,7 +240,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Joseph Murphy's principles until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
@@ -322,7 +322,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state a universal principle of Life the way Louise taught it, quote it in her plain warm words, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part affirmation that ALWAYS ends with "all is well in my world". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -336,7 +336,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Louise Hay's principles until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
@@ -419,7 +419,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state one of Hill's principles as a law of success, quote it in his words, one connecting line that lands with weight. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Hill's register that ALWAYS ends with "what I conceive and believe, I achieve". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -433,7 +433,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Napoleon Hill's principles until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
@@ -518,7 +518,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Fox read it (as spiritual law), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Fox's register that ALWAYS ends with "I think of God instead". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -532,7 +532,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Emmet Fox's principles until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
@@ -615,7 +615,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state one verified Jung insight, quote it accurately with its source ("as Jung wrote in Aion..."), one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION RESOLUTION, quick: a fresh first-person, present-tense three-part reflective resolution that ALWAYS ends with "I make the unconscious conscious". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys fuller at about 5 to 6 minutes each. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final resolution once more, then a short closing line tying back to the title, ideally a held question.
@@ -629,7 +629,7 @@ IMAGE CUES AND PAUSES
 LENGTH — THIS IS A HARD REQUIREMENT
 - The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Jung's ideas until the whole piece is long enough.
-- The later keys especially must be full and expansive (5 to 6 minutes each), not summarized.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.

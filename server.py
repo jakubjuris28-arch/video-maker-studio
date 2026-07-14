@@ -295,6 +295,22 @@ def generate():
     return jsonify({"job_id": job_id})
 
 
+@app.route("/version")
+def version():
+    """Which build is running (Render sets RENDER_GIT_COMMIT on deploy)."""
+    commit = os.environ.get("RENDER_GIT_COMMIT", "")
+    if not commit:
+        try:
+            import subprocess
+            commit = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+                stderr=subprocess.DEVNULL).decode().strip()
+        except Exception:
+            commit = "unknown"
+    return jsonify({"commit": commit[:12]})
+
+
 @app.route("/status/<job_id>")
 def status(job_id):
     job = JOBS.get(job_id)
