@@ -14,6 +14,7 @@ import time
 import base64
 import secrets
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
@@ -741,44 +742,64 @@ def run_pipeline(job_id, p, job, output_root):
         script = call_anthropic(cfg, model, system, build_script_user(p), max_tokens)
         stats = compute_stats(script)
 
-        # per-key expansion: one-pass generation stalls well under long targets,
-        # so every key gets its own escalating budget (2/3/4 then 5-6 min) and
-        # any key that falls short is rewritten ALONE until it fills its budget.
+        # per-key expansion: one-pass generation stalls well under long targets.
+        # Keys 1-3 are brought to their locked 2/3/4-minute sizes; keys 4+ have
+        # no rule of their own, so only the shortest are grown - just enough for
+        # the TOTAL to land on target. The rewrites are independent (each call
+        # replaces only its own key with the identical prompt as before), so
+        # they run IN PARALLEL for speed.
         if stats["spoken_chars"] < 0.92 * target:
             parts = split_key_sections(script, p["num_keys"])
             if parts:
                 head, sections, tail = parts
                 budgets = key_budgets(target, p["num_keys"])
                 n_fixed = min(3, p["num_keys"])  # keys with a locked minute size
-                for i in range(p["num_keys"]):
-                    n = i + 1
-                    # keys 4+ have no rule of their own - only grow them while
-                    # the total is still under the requested length
-                    if i >= n_fixed and compute_stats(script)["spoken_chars"] >= 0.92 * target:
+
+                def _expand_one(i, base_script):
+                    """Rewrite key i+1 alone; returns (i, new_section | None)."""
+                    try:
+                        bigger = call_anthropic(
+                            cfg, model, system,
+                            build_expand_key_user(p, base_script, i + 1, sections[i],
+                                                  budgets[i], exact=i < n_fixed),
+                            min(int(budgets[i] / 2.2) + 1000, 9000)).strip()
+                    except Exception as e:
+                        job["warnings"].append(f"Key {i+1} expand failed: {e}")
+                        return i, None
+                    # accept only a valid, longer replacement for THIS key
+                    mm = KEY_CUE_RE.search(bigger)
+                    if (mm and int(mm.group(1)) == i + 1
+                            and len(KEY_CUE_RE.findall(bigger)) == 1
+                            and spoken_len(bigger) > spoken_len(sections[i]) + 200):
+                        return i, bigger.rstrip() + "\n\n"
+                    return i, None
+
+                for round_no in range(2):
+                    # keys 1-3: always fill their locked sizes
+                    todo = [i for i in range(n_fixed)
+                            if spoken_len(sections[i]) < 0.9 * budgets[i]]
+                    # keys 4+: shortest first, only enough to reach the total
+                    base = head + "".join(sections) + tail
+                    shortfall = (target - compute_stats(base)["spoken_chars"]
+                                 - sum(budgets[i] - spoken_len(sections[i]) for i in todo))
+                    for i in sorted(range(n_fixed, p["num_keys"]),
+                                    key=lambda k: spoken_len(sections[k])):
+                        if shortfall <= 0:
+                            break
+                        if spoken_len(sections[i]) < 0.9 * budgets[i]:
+                            todo.append(i)
+                            shortfall -= budgets[i] - spoken_len(sections[i])
+                    if not todo:
                         break
-                    for attempt in range(2):
-                        have = spoken_len(sections[i])
-                        if have >= 0.9 * budgets[i]:
-                            break
-                        job.update(
-                            stage=f"Expanding key {n} ({have}/{budgets[i]} chars)...",
-                            progress=10 + int(40 * (i + attempt / 2) / p["num_keys"]))
-                        try:
-                            bigger = call_anthropic(
-                                cfg, model, system,
-                                build_expand_key_user(p, script, n, sections[i],
-                                                      budgets[i], exact=i < n_fixed),
-                                min(int(budgets[i] / 2.2) + 1000, 9000)).strip()
-                        except Exception as e:
-                            job["warnings"].append(f"Key {n} expand failed: {e}")
-                            break
-                        # accept only a valid, longer replacement for THIS key
-                        mm = KEY_CUE_RE.search(bigger)
-                        if (mm and int(mm.group(1)) == n
-                                and len(KEY_CUE_RE.findall(bigger)) == 1
-                                and spoken_len(bigger) > spoken_len(sections[i]) + 200):
-                            sections[i] = bigger.rstrip() + "\n\n"
-                            script = head + "".join(sections) + tail
+                    job.update(
+                        stage=(f"Expanding keys {', '.join(str(i+1) for i in sorted(todo))} "
+                               f"in parallel (round {round_no + 1})..."),
+                        progress=12 + 14 * round_no)
+                    with ThreadPoolExecutor(max_workers=4) as ex:
+                        for i, new_sec in ex.map(lambda k: _expand_one(k, base), todo):
+                            if new_sec:
+                                sections[i] = new_sec
+                script = head + "".join(sections) + tail
                 stats = compute_stats(script)
             else:
                 job["warnings"].append(
@@ -896,24 +917,35 @@ def run_pipeline(job_id, p, job, output_root):
         # ---------- 3. images ----------
         images = {}  # index -> png_bytes
         if do_images:
-            n = len(prompts)
-            for i, pr in enumerate(prompts):
-                job.update(
-                    stage=f"Generating image {i+1} of {n} via KeyAI...",
-                    progress=30 + int(45 * (i / max(n, 1))),
-                )
-                if not pr:
-                    job["warnings"].append(f"Key {i+1}: no prompt, slot left empty.")
-                    continue
-                try:
-                    png = generate_image(pr, cfg)
-                    # always save a standalone PNG too (safety net)
-                    png_path = os.path.join(out_dir, f"{slug}_mk{i+1}.png")
-                    with open(png_path, "wb") as fh:
-                        fh.write(png)
-                    images[i] = png
-                except Exception as e:
-                    job["warnings"].append(f"Key {i+1} image failed, slot left empty: {e}")
+            # all images render at the same time - KeyAI jobs are independent,
+            # so 9 sequential 30-60s waits collapse into roughly one
+            def _one_image(idx, pr):
+                png = generate_image(pr, cfg)
+                # always save a standalone PNG too (safety net)
+                png_path = os.path.join(out_dir, f"{slug}_mk{idx+1}.png")
+                with open(png_path, "wb") as fh:
+                    fh.write(png)
+                return png
+
+            futures = {}
+            with ThreadPoolExecutor(max_workers=5) as ex:
+                for i, pr in enumerate(prompts):
+                    if not pr:
+                        job["warnings"].append(f"Key {i+1}: no prompt, slot left empty.")
+                        continue
+                    futures[ex.submit(_one_image, i, pr)] = i
+                job.update(stage=f"Generating {len(futures)} images via KeyAI (in parallel)...",
+                           progress=32)
+                done = 0
+                for fut in as_completed(futures):
+                    i = futures[fut]
+                    try:
+                        images[i] = fut.result()
+                    except Exception as e:
+                        job["warnings"].append(f"Key {i+1} image failed, slot left empty: {e}")
+                    done += 1
+                    job.update(stage=f"Generating images via KeyAI ({done}/{len(futures)} done)...",
+                               progress=30 + int(45 * done / max(len(futures), 1)))
         else:
             job["warnings"].append("Image generation skipped (checkbox off). Empty slots in mindmap.")
 
