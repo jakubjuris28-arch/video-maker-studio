@@ -95,7 +95,7 @@ def build_system_neville(p):
     num = p["num_keys"]
     num_word = "nine" if num == 9 else "six"
     ending = p["ending"]
-    product = p.get("product_name", "The Wish Fulfilled Method")
+    product = p.get("product_name", "21-Day Reality Shift")
     funnel = p.get("funnel_channel", "Living In The End")
 
     if ending == "product":
@@ -646,9 +646,9 @@ AUTHORS = {
         product_pitch_fallback='Knowing the sentence is one thing - living it so the fear never grips you takes daily practice,\nthe old patterns have deep roots and return when things get tight.\n\n★ THE OVERFLOW COVENANT ★\n→ 21-day sequence, one decree each morning rooted in your unfailing supply\n→ until the old fear is gone for good\n→ $27 · 30-day refund · link in description.'),
     "neville": dict(anchor="imagination creates my reality", display='Neville Goddard', signature='- Neville Goddard',
         build_system=build_system_neville, meta_system=META_NEVILLE,
-        cta_default="it's done", product_default='The Wish Fulfilled Method', funnel_default='Living In The End',
+        cta_default="it's done", product_default='21-Day Reality Shift', funnel_default='Living In The End',
         premise_hint='Bible verse, read the way Neville read it',
-        product_pitch_fallback='Knowing the law is one thing - living in the end every day takes practice,\nthe old self-concept has deep roots and returns when the 3D argues back.\n\n★ {PRODUCT} ★\n→ a daily sequence to assume and persist until it hardens into fact\n→ until living in the end is your natural state\n→ link in description.'),
+        product_pitch_fallback='Knowing the law is one thing - living in the end every day takes practice,\nthe old self-concept has deep roots and returns when the 3D argues back.\n\n★ {PRODUCT} ★\n→ 21 mornings, one shift each morning + a 10-minute evening practice in the wish fulfilled\n→ until the old you stops coming back\n→ $27 · 30-day refund · link in description.'),
     "murphy": dict(anchor="my subconscious brings it to pass", display='Joseph Murphy', signature='- Joseph Murphy',
         build_system=build_system_murphy, meta_system=META_MURPHY,
         cta_default="it's done", product_default='The 21 Nights Method', funnel_default='Divine Manifestation',
