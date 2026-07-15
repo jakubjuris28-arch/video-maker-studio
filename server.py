@@ -81,7 +81,7 @@ PAGE = """<!doctype html>
 </head>
 <body>
 <div class="wrap">
-  <h1>Video Maker Studio</h1>
+  <h1>Video Maker Studio <a href="/videos" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">📁 Stored videos</a></h1>
   <p class="sub">Faceless video packages &mdash; pick the author, type the title, get script + mindmap.</p>
 
   <form id="form">
@@ -289,6 +289,7 @@ def generate():
         "do_images": bool(d.get("do_images", True)),
     }
 
+    _cleanup_output()
     job_id = uuid.uuid4().hex[:12]
     JOBS[job_id] = {
         "status": "running", "stage": "Queued...", "progress": 0, "warnings": [],
@@ -325,6 +326,67 @@ def status(job_id):
     if not job:
         return jsonify({"error": "unknown job"}), 404
     return jsonify(job)
+
+
+KEEP_DAYS = float(os.environ.get("KEEP_DAYS", "2"))
+
+
+def _cleanup_output():
+    """Delete stored video folders older than KEEP_DAYS days."""
+    import shutil, time as _t
+    cutoff = _t.time() - KEEP_DAYS * 86400
+    try:
+        for name in os.listdir(OUTPUT_ROOT):
+            d = os.path.join(OUTPUT_ROOT, name)
+            if os.path.isdir(d) and os.path.getmtime(d) < cutoff:
+                shutil.rmtree(d, ignore_errors=True)
+    except Exception:
+        pass
+
+
+@app.route("/videos")
+def videos():
+    """Library of every stored generation, straight from disk - works even
+    after a server restart (unlike the in-memory job status)."""
+    import time as _t
+    _cleanup_output()
+    jobs = []
+    try:
+        for name in os.listdir(OUTPUT_ROOT):
+            d = os.path.join(OUTPUT_ROOT, name)
+            if not os.path.isdir(d):
+                continue
+            files = sorted(f for f in os.listdir(d)
+                           if f.endswith((".xmind", ".txt")) and not f.startswith("_"))
+            if not files:
+                continue
+            jobs.append({
+                "id": name,
+                "age_h": (_t.time() - os.path.getmtime(d)) / 3600,
+                "files": [(f, os.path.getsize(os.path.join(d, f))) for f in files],
+            })
+    except Exception:
+        pass
+    jobs.sort(key=lambda j: j["age_h"])
+
+    rows = []
+    for j in jobs:
+        age = f"{j['age_h']:.1f} h ago" if j["age_h"] < 48 else f"{j['age_h']/24:.1f} days ago"
+        links = "".join(
+            f'<a class="dl" href="/download/{j["id"]}/{f}">&#8595; {f} '
+            f'<span style="color:#777;font-size:12px">({sz//1024} KB)</span></a>'
+            for f, sz in j["files"])
+        rows.append(f'<div class="panel"><div style="color:#999;font-size:13px">'
+                    f'{age} &middot; job {j["id"]}</div>{links}</div>')
+
+    body = "".join(rows) or '<div class="panel">No stored videos yet.</div>'
+    return f"""<!doctype html><html><head><meta charset="utf-8">
+<title>Stored videos</title><style>{PAGE.split('<style>')[1].split('</style>')[0]}</style></head>
+<body><div class="wrap"><h1>Stored videos
+<a href="/" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">&#8592; Generator</a></h1>
+<p style="color:#999;font-size:13px">Every generated script and mindmap is kept here for {KEEP_DAYS:g} days, then deleted automatically.
+On the free cloud server the storage is also cleared whenever the server restarts or updates - download anything important right away; the local app keeps the full {KEEP_DAYS:g} days reliably.</p>
+{body}</div></body></html>"""
 
 
 @app.route("/download/<job_id>/<path:filename>")
