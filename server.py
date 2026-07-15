@@ -328,7 +328,7 @@ def status(job_id):
     return jsonify(job)
 
 
-KEEP_DAYS = float(os.environ.get("KEEP_DAYS", "2"))
+KEEP_DAYS = float(os.environ.get("KEEP_DAYS", "1"))   # stored videos live 24 hours
 
 
 def _cleanup_output():
@@ -384,8 +384,8 @@ def videos():
 <title>Stored videos</title><style>{PAGE.split('<style>')[1].split('</style>')[0]}</style></head>
 <body><div class="wrap"><h1>Stored videos
 <a href="/" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">&#8592; Generator</a></h1>
-<p style="color:#999;font-size:13px">Every generated script and mindmap is kept here for {KEEP_DAYS:g} days, then deleted automatically.
-On the free cloud server the storage is also cleared whenever the server restarts or updates - download anything important right away; the local app keeps the full {KEEP_DAYS:g} days reliably.</p>
+<p style="color:#999;font-size:13px">Every generated script and mindmap is kept here for {KEEP_DAYS*24:g} hours, then deleted automatically.
+On the free cloud server the storage is also cleared whenever the server restarts or updates - download anything important right away; the local app keeps the full {KEEP_DAYS*24:g} hours reliably.</p>
 {body}</div></body></html>"""
 
 
