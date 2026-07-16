@@ -130,6 +130,11 @@ PAGE = """<!doctype html>
       <label for="do_images">Generate images via KeyAI and embed them</label>
     </div>
 
+    <div class="check">
+      <input type="checkbox" name="add_subscribe" id="add_subscribe">
+      <label for="add_subscribe">Add a short subscribe reminder (after the affirmation, in the author's voice)</label>
+    </div>
+
     <button type="submit" id="go">Generate</button>
   </form>
 
@@ -172,6 +177,7 @@ form.addEventListener('submit', async (e) => {
 
   const data = Object.fromEntries(new FormData(form).entries());
   data.do_images = form.do_images.checked;
+  data.add_subscribe = form.add_subscribe.checked;
 
   const r = await fetch('/generate', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -215,6 +221,7 @@ function showResults(jobId, j){
   results.classList.remove('hidden');
   const s = j.result.stats || {};
   document.getElementById('stats').innerHTML =
+    '<span class="stat">Author <b>'+(j.author_display||'?')+'</b></span>' +
     '<span class="stat">Spoken chars <b>'+s.spoken_chars+'</b></span>' +
     '<span class="stat">Approx minutes <b>'+s.minutes+'</b></span>' +
     '<span class="stat">Image cues <b>'+s.image_cues+'</b></span>' +
@@ -272,9 +279,10 @@ def generate():
         except (TypeError, ValueError):
             return default
 
-    author_key = d.get("author") or "shinn"
+    author_key = (d.get("author") or "").strip().lower()
     if author_key not in pipeline.AUTHORS:
-        return jsonify({"error": "unknown author"}), 400
+        return jsonify({"error": "No author selected - refresh the page and pick "
+                                  "the author again (nothing was generated)."}), 400
     params = {
         "author": author_key,
         "title": title,
@@ -287,12 +295,15 @@ def generate():
         "extra": (d.get("extra") or "").strip(),
         "model_override": (d.get("model_override") or "").strip(),
         "do_images": bool(d.get("do_images", True)),
+        "add_subscribe": bool(d.get("add_subscribe", False)),
     }
 
     _cleanup_output()
     job_id = uuid.uuid4().hex[:12]
     JOBS[job_id] = {
-        "status": "running", "stage": "Queued...", "progress": 0, "warnings": [],
+        "status": "running", "progress": 0, "warnings": [],
+        "author_display": pipeline.AUTHORS[author_key]["display"],
+        "stage": f"Queued ({pipeline.AUTHORS[author_key]['display']})...",
     }
 
     t = threading.Thread(
@@ -354,7 +365,7 @@ def videos():
     try:
         for name in os.listdir(OUTPUT_ROOT):
             d = os.path.join(OUTPUT_ROOT, name)
-            if not os.path.isdir(d):
+            if not os.path.isdir(d) or name.startswith("test_"):
                 continue
             files = sorted(f for f in os.listdir(d)
                            if f.endswith((".xmind", ".txt")) and not f.startswith("_"))

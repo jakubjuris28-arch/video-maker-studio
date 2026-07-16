@@ -47,7 +47,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Florence Scovel Shinn's principles until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
@@ -141,7 +141,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Neville Goddard's principles until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
@@ -238,7 +238,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Joseph Murphy's principles until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
@@ -334,7 +334,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Louise Hay's principles until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
@@ -431,7 +431,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Napoleon Hill's principles until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
@@ -530,7 +530,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Emmet Fox's principles until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 
@@ -690,7 +690,7 @@ IMAGE CUES AND PAUSES
 - Insert [long_pause] markers at each major section break.
 
 LENGTH — THIS IS A HARD REQUIREMENT
-- The spoken text MUST reach at least the target character count (about 850 characters per minute). Treat the target as a strict MINIMUM, not a ceiling.
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
 - Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of Jung's ideas until the whole piece is long enough.
 - The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
 

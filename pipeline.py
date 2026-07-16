@@ -254,6 +254,12 @@ def build_script_user(p):
         lines.append(f"Core sentence/phrase this video teaches: {p['core']}.")
     if p.get("extra"):
         lines.append(f"Extra instructions: {p['extra']}.")
+    if p.get("add_subscribe"):
+        lines.append("SUBSCRIBE REMINDER: right after the participation affirmation "
+                     "block (before the first key), add ONE warm sentence in the "
+                     "author's voice gently inviting the listener to subscribe so "
+                     "tomorrow's teaching reaches them - a single sentence, commas "
+                     "only, no hype, then continue the locked format.")
     vc = variety_context(p["author"])
     if vc:
         lines.append(vc)
@@ -697,7 +703,7 @@ def key_budgets(target_chars, num_keys):
 
 
 KEY_CUE_RE = re.compile(r"\[IMAGE:\s*MASTER\s+KEY\s+(\d+)", re.I)
-RECAP_RE = re.compile(r"here is the whole picture", re.I)
+RECAP_RE = re.compile(r"here(?:\u2019s|'s| is) the whole picture", re.I)
 
 
 def spoken_len(text):
@@ -742,6 +748,21 @@ def build_expand_key_user(p, script, key_num, section, budget, exact=False):
         f"[IMAGE: MASTER KEY {key_num} ...] cue line exactly as it is, keep the same key "
         f"heading wording, commas only and no periods, keep [long_pause] markers, and end "
         f"where the key ends (do NOT include the next key, the recap, or the ending).\n\n"
+        f"Return ONLY the rewritten key {key_num} section, nothing else.\n\n"
+        f"FULL SCRIPT:\n{script}"
+    )
+
+
+def build_trim_key_user(p, script, key_num, section, budget):
+    return (
+        f"Below is the full finished script. Key {key_num} is {spoken_len(section)} characters of "
+        f"spoken text, which makes the whole script longer than requested - condense this key "
+        f"to about {budget} characters.\n\n"
+        f"HOW to shorten: cut repetition and filler while KEEPING every distinct teaching beat, "
+        f"story and example (compressed, not deleted) - the key must still feel complete.\n\n"
+        f"KEEP THE LOCKED FORMAT: start with this key's [IMAGE: MASTER KEY {key_num} ...] cue "
+        f"line exactly as it is, keep the same key heading wording, commas only and no periods, "
+        f"keep [long_pause] markers, and end where the key ends.\n\n"
         f"Return ONLY the rewritten key {key_num} section, nothing else.\n\n"
         f"FULL SCRIPT:\n{script}"
     )
@@ -798,7 +819,7 @@ def run_pipeline(job_id, p, job, output_root):
         os.makedirs(out_dir, exist_ok=True)
 
         # ---------- 1. script ----------
-        job.update(stage="Writing the script with the Anthropic API...", progress=8)
+        job.update(stage=f"Writing the script with the Anthropic API ({author['display']})...", progress=8)
         system = build_script_system(p)
         target = p["target_chars"]
         # generous token headroom (~4 chars/token) so length is never capped
@@ -894,6 +915,41 @@ def run_pipeline(job_id, p, job, output_root):
                 script, stats = longer, new_stats
             else:
                 break
+
+        # symmetric trim: if the model OVERSHOT the requested length, condense
+        # the most-over keys back toward their budgets until the total is close
+        if stats["spoken_chars"] > 1.12 * target:
+            parts = split_key_sections(script, p["num_keys"])
+            if parts:
+                head, sections, tail = parts
+                budgets = key_budgets(target, p["num_keys"])
+                order = sorted(range(p["num_keys"]),
+                               key=lambda i: spoken_len(sections[i]) - budgets[i],
+                               reverse=True)
+                for i in order:
+                    if compute_stats(head + "".join(sections) + tail)["spoken_chars"] <= 1.08 * target:
+                        break
+                    have = spoken_len(sections[i])
+                    if have <= budgets[i] * 1.15:
+                        continue
+                    job.update(stage=f"Script over target, condensing key {i+1} "
+                                     f"({have} -> ~{budgets[i]} chars)...", progress=30)
+                    base = head + "".join(sections) + tail
+                    try:
+                        smaller = call_anthropic(
+                            cfg, model, system,
+                            build_trim_key_user(p, base, i + 1, sections[i], budgets[i]),
+                            min(int(budgets[i] / 2.2) + 1000, 9000)).strip()
+                    except Exception as e:
+                        job["warnings"].append(f"Key {i+1} condense failed: {e}")
+                        continue
+                    mm = KEY_CUE_RE.search(smaller)
+                    if (mm and int(mm.group(1)) == i + 1
+                            and len(KEY_CUE_RE.findall(smaller)) == 1
+                            and spoken_len(smaller) < have - 200):
+                        sections[i] = smaller.rstrip() + "\n\n"
+                script = head + "".join(sections) + tail
+                stats = compute_stats(script)
 
         if stats["spoken_chars"] < 0.85 * target:
             job["warnings"].append(
