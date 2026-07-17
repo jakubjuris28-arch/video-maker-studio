@@ -18,7 +18,8 @@ app = Flask(__name__)
 
 import json as _json
 _OPTS = "".join(f'<option value="{k}">{v["display"]}</option>' for k, v in pipeline.AUTHORS.items())
-_META = _json.dumps({k: {"hint": v["premise_hint"], "cta": v["cta_default"]} for k, v in pipeline.AUTHORS.items()})
+_META = _json.dumps({k: {"hint": v["premise_hint"], "cta": v["cta_default"],
+                         "anchor": v.get("anchor", "")} for k, v in pipeline.AUTHORS.items()})
 
 OUTPUT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output")
 os.makedirs(OUTPUT_ROOT, exist_ok=True)
@@ -91,12 +92,6 @@ PAGE = """<!doctype html>
     <div id="custom_focus_wrap" style="display:none">
       <label>Custom topic or author <span class="hint">(anything - "spirituality in general", "Marcus Aurelius", "discipline", "Rumi"...)</span></label>
       <input type="text" name="custom_focus" id="custom_focus" placeholder="spirituality in general" autocomplete="off">
-      <label>Participation affirmation</label>
-      <select name="affirmation_mode">
-        <option value="adjusted">yes - adjusted to the theme</option>
-        <option value="spiritual">yes - spiritual</option>
-        <option value="none">no affirmation</option>
-      </select>
     </div>
 
     <label>Title <span class="hint">(required, read verbatim as the first line)</span></label>
@@ -128,6 +123,9 @@ PAGE = """<!doctype html>
     <select name="premise_choice" id="premise_choice"></select>
     <input type="text" name="scripture" id="scripture_input" placeholder="type your premise / verse / quote here"
            style="display:none; margin-top:8px" autocomplete="off">
+
+    <label>Participation affirmation <span class="hint">(choose - some niches don't need one)</span></label>
+    <select name="affirmation_choice" id="affirmation_choice"></select>
 
     <label>Core sentence / phrase the video teaches <span class="hint">(optional)</span></label>
     <input type="text" name="core" placeholder="">
@@ -203,6 +201,16 @@ function syncAuthor(){
     ['own',  'my own premise (write below)'],
   ];
   premiseSel.innerHTML = opts.map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
+  const affSel = document.getElementById('affirmation_choice');
+  let affOpts = isCustom ? [
+    ['adjusted', 'yes - adjusted to the theme'],
+    ['spiritual','yes - spiritual'],
+    ['none',     'no affirmation'],
+  ] : [
+    ['classic', 'yes - the author\'s affirmation (ends "' + a.anchor + '")'],
+    ['none',    'no affirmation'],
+  ];
+  affSel.innerHTML = affOpts.map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
   syncPremiseInput();
 }
 premiseSel.addEventListener('change', syncPremiseInput);
@@ -346,8 +354,8 @@ def generate():
         "custom_focus": (d.get("custom_focus") or "").strip(),
         "premise_mode": d.get("premise_choice") if d.get("premise_choice") in
                         ("auto", "biblical", "quote", "none") else "auto",
-        "affirmation_mode": d.get("affirmation_mode") if d.get("affirmation_mode") in
-                        ("adjusted", "spiritual", "none") else "adjusted",
+        "affirmation_mode": d.get("affirmation_choice") if d.get("affirmation_choice") in
+                        ("adjusted", "spiritual", "none", "classic") else "adjusted",
     }
     if author_key == "custom" and not params["custom_focus"]:
         return jsonify({"error": "Type the custom topic or author (e.g. 'spirituality "

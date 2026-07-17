@@ -158,7 +158,15 @@ def call_anthropic(cfg, model, system, user_content, max_tokens, strict=False):
 # --------------------------------------------------------------------------
 def build_script_system(p):
     """Dispatch to the selected author's locked script format."""
-    return AUTHORS[p["author"]]["build_system"](p)
+    s = AUTHORS[p["author"]]["build_system"](p)
+    if p.get("affirmation_mode") == "none" and p["author"] != "custom":
+        # remove the affirmation from a locked format (custom handles it natively)
+        s = re.sub(r"(?m)^4\. PARTICIPATION (AFFIRMATION|RESOLUTION).*$",
+                   "4. NO participation affirmation in this video - do not include "
+                   "one anywhere, and never say 'say it with me'.", s)
+        s = re.sub(r"(?m)^9\. The final (affirmation|resolution) once more.*$",
+                   "9. A short closing line tying back to the title.", s)
+    return s
 
 
 def build_expand_user(p, script, current_chars):
@@ -938,39 +946,84 @@ def run_pipeline(job_id, p, job, output_root):
                 break
 
         # symmetric trim: if the model OVERSHOT the requested length, condense
-        # the most-over keys back toward their budgets until the total is close
+        # every over-budget key IN PARALLEL, up to two rounds, until the total
+        # lands close to the target; whole-script rewrite as a last resort
         if stats["spoken_chars"] > 1.12 * target:
             parts = split_key_sections(script, p["num_keys"])
             if parts:
                 head, sections, tail = parts
                 budgets = key_budgets(target, p["num_keys"])
-                order = sorted(range(p["num_keys"]),
-                               key=lambda i: spoken_len(sections[i]) - budgets[i],
-                               reverse=True)
-                for i in order:
-                    if compute_stats(head + "".join(sections) + tail)["spoken_chars"] <= 1.08 * target:
-                        break
-                    have = spoken_len(sections[i])
-                    if have <= budgets[i] * 1.15:
-                        continue
-                    job.update(stage=f"Script over target, condensing key {i+1} "
-                                     f"({have} -> ~{budgets[i]} chars)...", progress=30)
-                    base = head + "".join(sections) + tail
+
+                def _trim_one(i, base_script):
                     try:
                         smaller = call_anthropic(
                             cfg, model, system,
-                            build_trim_key_user(p, base, i + 1, sections[i], budgets[i]),
+                            build_trim_key_user(p, base_script, i + 1, sections[i], budgets[i]),
                             min(int(budgets[i] / 2.2) + 1000, 9000)).strip()
                     except Exception as e:
                         job["warnings"].append(f"Key {i+1} condense failed: {e}")
-                        continue
+                        return i, None
                     mm = KEY_CUE_RE.search(smaller)
                     if (mm and int(mm.group(1)) == i + 1
                             and len(KEY_CUE_RE.findall(smaller)) == 1
-                            and spoken_len(smaller) < have - 200):
-                        sections[i] = smaller.rstrip() + "\n\n"
+                            and spoken_len(smaller) < spoken_len(sections[i]) - 200):
+                        return i, smaller.rstrip() + "\n\n"
+                    return i, None
+
+                for round_no in range(2):
+                    base = head + "".join(sections) + tail
+                    total_now = compute_stats(base)["spoken_chars"]
+                    if total_now <= 1.08 * target:
+                        break
+                    todo = sorted(
+                        (i for i in range(p["num_keys"])
+                         if spoken_len(sections[i]) > budgets[i] + 300),
+                        key=lambda i: spoken_len(sections[i]) - budgets[i],
+                        reverse=True)
+                    if not todo:
+                        break
+                    job.update(stage=(f"Script is {total_now}/{target} chars - condensing "
+                                      f"keys {', '.join(str(i+1) for i in sorted(todo))} "
+                                      f"(round {round_no + 1})..."), progress=30)
+                    with ThreadPoolExecutor(max_workers=4) as ex:
+                        for i, new_sec in ex.map(lambda k: _trim_one(k, base), todo):
+                            if new_sec:
+                                sections[i] = new_sec
                 script = head + "".join(sections) + tail
                 stats = compute_stats(script)
+
+        # last resort for a still-oversized script (or when splitting failed):
+        # one whole-script condense pass
+        if stats["spoken_chars"] > 1.12 * target:
+            job.update(stage=f"Still {stats['spoken_chars']}/{target} chars - full condense pass...",
+                       progress=32)
+            try:
+                condensed = call_anthropic(
+                    cfg, model, system,
+                    (f"This script is {stats['spoken_chars']} characters of spoken text but it "
+                     f"must be about {target} (within five percent). Rewrite it SHORTER to that "
+                     f"length: cut repetition and filler, never a whole teaching point.\n\n"
+                     f"KEEP EVERYTHING STRUCTURAL IDENTICAL: the title as the first spoken line, "
+                     f"every section in the same order, all {p['num_keys']} keys each with its "
+                     f"[IMAGE: MASTER KEY N ...] cue line, the [long_pause] markers, commas only "
+                     f"and no periods, the same affirmation and ending block.\n\n"
+                     f"Return ONLY the complete condensed script.\n\nCURRENT SCRIPT:\n{script}"),
+                    min(int(target / 2.6), 32000))
+                cstats = compute_stats(condensed)
+                if (0.85 * target <= cstats["spoken_chars"] < stats["spoken_chars"]
+                        and cstats["image_cues"] == p["num_keys"]):
+                    script, stats = condensed, cstats
+                else:
+                    job["warnings"].append(
+                        f"Full condense pass rejected (came back {cstats['spoken_chars']} chars, "
+                        f"{cstats['image_cues']} cues); keeping the longer script.")
+            except Exception as e:
+                job["warnings"].append(f"Full condense pass failed: {e}")
+
+        if stats["spoken_chars"] > 1.15 * target:
+            job["warnings"].append(
+                f"Script is {stats['spoken_chars']} chars vs target {target} - still over "
+                f"after condensing. The extra length is teaching content, not filler.")
 
         if stats["spoken_chars"] < 0.85 * target:
             job["warnings"].append(
