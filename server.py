@@ -91,25 +91,12 @@ PAGE = """<!doctype html>
     <div id="custom_focus_wrap" style="display:none">
       <label>Custom topic or author <span class="hint">(anything - "spirituality in general", "Marcus Aurelius", "discipline", "Rumi"...)</span></label>
       <input type="text" name="custom_focus" id="custom_focus" placeholder="spirituality in general" autocomplete="off">
-      <div class="row">
-        <div>
-          <label>Premise</label>
-          <select name="premise_mode">
-            <option value="auto">auto (best fit for the theme)</option>
-            <option value="biblical">yes - Bible verse</option>
-            <option value="quote">yes - real quote close to the theme</option>
-            <option value="none">no premise</option>
-          </select>
-        </div>
-        <div>
-          <label>Participation affirmation</label>
-          <select name="affirmation_mode">
-            <option value="adjusted">yes - adjusted to the theme</option>
-            <option value="spiritual">yes - spiritual</option>
-            <option value="none">no affirmation</option>
-          </select>
-        </div>
-      </div>
+      <label>Participation affirmation</label>
+      <select name="affirmation_mode">
+        <option value="adjusted">yes - adjusted to the theme</option>
+        <option value="spiritual">yes - spiritual</option>
+        <option value="none">no affirmation</option>
+      </select>
     </div>
 
     <label>Title <span class="hint">(required, read verbatim as the first line)</span></label>
@@ -137,8 +124,10 @@ PAGE = """<!doctype html>
     <label>Comment CTA <span class="hint">(two words; blank = author's default)</span></label>
     <input type="text" name="cta" id="cta" placeholder="">
 
-    <label>Premise <span class="hint" id="premise_hint">(optional; blank = model picks)</span></label>
-    <input type="text" name="scripture" placeholder="">
+    <label>Premise <span class="hint" id="premise_hint">(choose - no writing needed)</span></label>
+    <select name="premise_choice" id="premise_choice"></select>
+    <input type="text" name="scripture" id="scripture_input" placeholder="type your premise / verse / quote here"
+           style="display:none; margin-top:8px" autocomplete="off">
 
     <label>Core sentence / phrase the video teaches <span class="hint">(optional)</span></label>
     <input type="text" name="core" placeholder="">
@@ -192,13 +181,31 @@ const results = document.getElementById('results');
 let poll = null;
 const AUTHOR_META = __AUTHOR_META__;
 const authorSel = document.getElementById('author');
+const premiseSel = document.getElementById('premise_choice');
+const scriptureInput = document.getElementById('scripture_input');
+function syncPremiseInput(){
+  scriptureInput.style.display = premiseSel.value === 'own' ? 'block' : 'none';
+}
 function syncAuthor(){
   const a = AUTHOR_META[authorSel.value];
-  document.getElementById('premise_hint').textContent = '(optional; blank = model picks — ' + a.hint + ')';
+  document.getElementById('premise_hint').textContent = '(' + a.hint + ')';
   document.getElementById('cta').placeholder = a.cta;
-  document.getElementById('custom_focus_wrap').style.display =
-      authorSel.value === 'custom' ? 'block' : 'none';
+  const isCustom = authorSel.value === 'custom';
+  document.getElementById('custom_focus_wrap').style.display = isCustom ? 'block' : 'none';
+  let opts = isCustom ? [
+    ['auto',    'choose for me (best fit for the theme)'],
+    ['biblical','Bible verse (model picks a real one)'],
+    ['quote',   'real quote close to the theme (model picks)'],
+    ['none',    'no premise'],
+    ['own',     'my own premise (write below)'],
+  ] : [
+    ['auto', 'choose for me — ' + a.hint],
+    ['own',  'my own premise (write below)'],
+  ];
+  premiseSel.innerHTML = opts.map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
+  syncPremiseInput();
 }
+premiseSel.addEventListener('change', syncPremiseInput);
 authorSel.addEventListener('change', syncAuthor); syncAuthor();
 const keyChoice = document.getElementById('api_key_choice');
 const customKey = document.getElementById('custom_api_key');
@@ -329,14 +336,15 @@ def generate():
         "num_keys": 9 if str(d.get("num_keys", "9")) == "9" else 6,
         "ending": d.get("ending", "product"),
         "cta": (d.get("cta") or pipeline.AUTHORS[author_key]["cta_default"]).strip(),
-        "scripture": (d.get("scripture") or "").strip(),
+        "scripture": (d.get("scripture") or "").strip()
+                     if (d.get("premise_choice") or "auto") == "own" else "",
         "core": (d.get("core") or "").strip(),
         "extra": (d.get("extra") or "").strip(),
         "model_override": (d.get("model_override") or "").strip(),
         "do_images": bool(d.get("do_images", True)),
         "add_subscribe": bool(d.get("add_subscribe", False)),
         "custom_focus": (d.get("custom_focus") or "").strip(),
-        "premise_mode": d.get("premise_mode") if d.get("premise_mode") in
+        "premise_mode": d.get("premise_choice") if d.get("premise_choice") in
                         ("auto", "biblical", "quote", "none") else "auto",
         "affirmation_mode": d.get("affirmation_mode") if d.get("affirmation_mode") in
                         ("adjusted", "spiritual", "none") else "adjusted",
