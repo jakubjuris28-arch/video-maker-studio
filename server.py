@@ -434,14 +434,28 @@ def videos():
             d = os.path.join(OUTPUT_ROOT, name)
             if not os.path.isdir(d) or name.startswith("test_"):
                 continue
-            files = sorted(f for f in os.listdir(d)
-                           if f.endswith((".xmind", ".txt")) and not f.startswith("_"))
-            if not files:
+            script = next((f for f in sorted(os.listdir(d))
+                           if f.endswith("_RECORDING.txt")), None)
+            xmind = next((f for f in sorted(os.listdir(d))
+                          if f.endswith(".xmind")), None)
+            if not script and not xmind:
                 continue
+            title, author = "", ""
+            try:
+                with open(os.path.join(d, "_title.txt"), encoding="utf-8") as fh:
+                    tl = fh.read().splitlines()
+                    title = (tl[0] if tl else "").strip()
+                    author = (tl[1] if len(tl) > 1 else "").strip()
+            except Exception:
+                pass
+            if not title and (script or xmind):
+                # older folders: prettify the file slug
+                base = (script or xmind).rsplit("_RECORDING", 1)[0].rsplit("_MindMap", 1)[0]
+                title = base.replace("_", " ").strip().title()
             jobs.append({
-                "id": name,
+                "id": name, "title": title, "author": author,
                 "age_h": (_t.time() - os.path.getmtime(d)) / 3600,
-                "files": [(f, os.path.getsize(os.path.join(d, f))) for f in files],
+                "script": script, "xmind": xmind,
             })
     except Exception:
         pass
@@ -450,12 +464,19 @@ def videos():
     rows = []
     for j in jobs:
         age = f"{j['age_h']:.1f} h ago" if j["age_h"] < 48 else f"{j['age_h']/24:.1f} days ago"
-        links = "".join(
-            f'<a class="dl" href="/download/{j["id"]}/{f}">&#8595; {f} '
-            f'<span style="color:#777;font-size:12px">({sz//1024} KB)</span></a>'
-            for f, sz in j["files"])
-        rows.append(f'<div class="panel"><div style="color:#999;font-size:13px">'
-                    f'{age} &middot; job {j["id"]}</div>{links}</div>')
+        meta_line = " &middot; ".join(x for x in (j["author"], age) if x)
+        links = ""
+        if j["script"]:
+            links += (f'<a class="dl" href="/download/{j["id"]}/{j["script"]}">'
+                      f'&#128220; Script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
+        if j["xmind"]:
+            links += (f'<a class="dl" href="/download/{j["id"]}/{j["xmind"]}">'
+                      f'&#128506; Mindmap <span style="color:#777;font-size:12px">({j["xmind"]})</span></a>')
+        rows.append(
+            f'<details class="panel" style="cursor:pointer">'
+            f'<summary style="color:var(--gold);font-size:16px;font-weight:700">{j["title"]}'
+            f'<span style="color:#999;font-size:12px;font-weight:400;margin-left:10px">{meta_line}</span>'
+            f'</summary><div style="margin-top:10px">{links}</div></details>')
 
     body = "".join(rows) or '<div class="panel">No stored videos yet.</div>'
     return f"""<!doctype html><html><head><meta charset="utf-8">

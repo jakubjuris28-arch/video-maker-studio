@@ -849,6 +849,13 @@ def run_pipeline(job_id, p, job, output_root):
 
         out_dir = os.path.join(output_root, job_id)
         os.makedirs(out_dir, exist_ok=True)
+        # the human title names this video in the Stored videos library
+        # (underscore prefix keeps it out of the download listings)
+        try:
+            with open(os.path.join(out_dir, "_title.txt"), "w", encoding="utf-8") as fh:
+                fh.write(title + "\n" + p["author_display"])
+        except Exception:
+            pass
 
         # ---------- 1. script ----------
         job.update(stage=f"Writing the script with the Anthropic API ({author['display']})...", progress=8)
