@@ -127,9 +127,6 @@ PAGE = """<!doctype html>
     <label>Participation affirmation <span class="hint">(choose - some niches don't need one)</span></label>
     <select name="affirmation_choice" id="affirmation_choice"></select>
 
-    <label>Core sentence / phrase the video teaches <span class="hint">(optional)</span></label>
-    <input type="text" name="core" placeholder="">
-
     <label>Extra instructions <span class="hint">(optional)</span></label>
     <textarea name="extra" placeholder=""></textarea>
 
@@ -208,7 +205,7 @@ function syncAuthor(){
     ['spiritual','yes - spiritual'],
     ['none',     'no affirmation'],
   ] : [
-    ['classic', 'yes - the author\'s affirmation (ends "' + a.anchor + '")'],
+    ['classic', "yes - the author's affirmation (ends '" + a.anchor + "')"],
     ['none',    'no affirmation'],
   ];
   affSel.innerHTML = affOpts.map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
