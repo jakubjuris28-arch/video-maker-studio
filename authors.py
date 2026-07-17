@@ -707,7 +707,9 @@ def build_system_custom(p):
     num = p["num_keys"]
     num_word = "nine" if num == 9 else "six"
     ending = p["ending"]
-    focus = (p.get("custom_focus") or "spirituality in general").strip()
+    focus = (p.get("custom_focus") or
+             "the theme the TITLE itself states - infer the niche, the audience "
+             "and the fitting voice from the title alone").strip()
     product = p.get("product_name", "The Daily Practice")
     funnel = p.get("funnel_channel", "Divine Manifestation")
 
@@ -872,6 +874,11 @@ AUTHORS = {
         build_system=build_system_custom, meta_system=META_CUSTOM,
         cta_default="I'm ready", product_default='The Daily Practice', funnel_default='Divine Manifestation',
         premise_hint='type the topic or author below - premise will be a real fitting quote or verse',
+        product_pitch_fallback='Knowing these ideas is one thing - living them daily is another,\nthe old habits have deep roots and return when life gets loud.\n\n★ {PRODUCT} ★\n→ a simple daily sequence to make this teaching your normal state\n→ link in description.'),
+    "auto": dict(anchor="", display='Auto (different based on title)', signature='',
+        build_system=build_system_custom, meta_system=META_CUSTOM,
+        cta_default="I'm ready", product_default='The Daily Practice', funnel_default='Divine Manifestation',
+        premise_hint='nothing to type - the model reads the title and fits everything to it',
         product_pitch_fallback='Knowing these ideas is one thing - living them daily is another,\nthe old habits have deep roots and return when life gets loud.\n\n★ {PRODUCT} ★\n→ a simple daily sequence to make this teaching your normal state\n→ link in description.'),
 
 }

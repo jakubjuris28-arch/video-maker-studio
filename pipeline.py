@@ -159,7 +159,7 @@ def call_anthropic(cfg, model, system, user_content, max_tokens, strict=False):
 def build_script_system(p):
     """Dispatch to the selected author's locked script format."""
     s = AUTHORS[p["author"]]["build_system"](p)
-    if p.get("affirmation_mode") == "none" and p["author"] != "custom":
+    if p.get("affirmation_mode") == "none" and p["author"] not in ("custom", "auto"):
         # remove the affirmation from a locked format (custom handles it natively)
         s = re.sub(r"(?m)^4\. PARTICIPATION (AFFIRMATION|RESOLUTION).*$",
                    "4. NO participation affirmation in this video - do not include "
@@ -654,7 +654,7 @@ def build_xmind(path, title, num_keys, ending, meta, images,
     branches.append(title_branch)
 
     root = {
-        "id": nid(), "class": "topic", "title": title + "\n" + signature,
+        "id": nid(), "class": "topic", "title": (title + "\n" + signature).strip(),
         "structureClass": "org.xmind.ui.logic.right",
         "children": {"attached": branches},
     }
@@ -834,6 +834,9 @@ def run_pipeline(job_id, p, job, output_root):
             signature = "- " + focus.title()
             # each custom topic gets its own do-not-repeat memory
             p["history_key"] = "custom_" + slugify(focus, 24)
+        elif p["author"] == "auto":
+            p["author_display"] = "Auto (from title)"
+            signature = ""   # central node shows the title alone
         model = p.get("model_override") or cfg.get("MODEL", "claude-sonnet-5")
         do_images = p.get("do_images", True)
         title = p["title"]

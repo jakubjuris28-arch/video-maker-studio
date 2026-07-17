@@ -188,8 +188,9 @@ function syncAuthor(){
   const a = AUTHOR_META[authorSel.value];
   document.getElementById('premise_hint').textContent = '(' + a.hint + ')';
   document.getElementById('cta').placeholder = a.cta;
-  const isCustom = authorSel.value === 'custom';
-  document.getElementById('custom_focus_wrap').style.display = isCustom ? 'block' : 'none';
+  const isCustom = authorSel.value === 'custom' || authorSel.value === 'auto';
+  document.getElementById('custom_focus_wrap').style.display =
+      authorSel.value === 'custom' ? 'block' : 'none';
   let opts = isCustom ? [
     ['auto',    'choose for me (best fit for the theme)'],
     ['biblical','Bible verse (model picks a real one)'],
