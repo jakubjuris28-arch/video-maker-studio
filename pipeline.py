@@ -260,7 +260,7 @@ def build_script_user(p):
                      "author's voice gently inviting the listener to subscribe so "
                      "tomorrow's teaching reaches them - a single sentence, commas "
                      "only, no hype, then continue the locked format.")
-    vc = variety_context(p["author"])
+    vc = variety_context(p.get("history_key") or p["author"])
     if vc:
         lines.append(vc)
     lines.append("\nWrite the full script now, following the locked format exactly.")
@@ -809,6 +809,13 @@ def run_pipeline(job_id, p, job, output_root):
         author = AUTHORS[p.get("author") or "shinn"]
         p["author"] = p.get("author") or "shinn"
         p["author_display"] = author["display"]
+        signature = author["signature"]
+        if p["author"] == "custom":
+            focus = (p.get("custom_focus") or "Spiritual Teaching").strip()
+            p["author_display"] = focus.title()
+            signature = "- " + focus.title()
+            # each custom topic gets its own do-not-repeat memory
+            p["history_key"] = "custom_" + slugify(focus, 24)
         model = p.get("model_override") or cfg.get("MODEL", "claude-sonnet-5")
         do_images = p.get("do_images", True)
         title = p["title"]
@@ -1020,7 +1027,7 @@ def run_pipeline(job_id, p, job, output_root):
                     job["warnings"].append(
                         f"Length compression incomplete ({e2}); using best available text.")
 
-        remember_run(p["author"], title, meta)
+        remember_run(p.get("history_key") or p["author"], title, meta)
 
         # figure out the prompts we'll feed to KeyAI
         prompts = []
@@ -1080,7 +1087,7 @@ def run_pipeline(job_id, p, job, output_root):
         xmind_path = os.path.join(out_dir, f"{slug}_MindMap.xmind")
         build_xmind(xmind_path, title, p["num_keys"], p["ending"], meta, images,
                     product_name=p["product_name"], funnel_channel=p["funnel_channel"],
-                    signature=author["signature"],
+                    signature=signature,
                     product_fallback=author["product_pitch_fallback"],
                     anchor=author.get("anchor", ""))
 

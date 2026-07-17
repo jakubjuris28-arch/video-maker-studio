@@ -88,6 +88,11 @@ PAGE = """<!doctype html>
     <label>Author <span class="hint">(each has their own locked script format)</span></label>
     <select name="author" id="author">__AUTHOR_OPTIONS__</select>
 
+    <div id="custom_focus_wrap" style="display:none">
+      <label>Custom topic or author <span class="hint">(e.g. "spirituality in general", "Marcus Aurelius", "Rumi"...)</span></label>
+      <input type="text" name="custom_focus" id="custom_focus" placeholder="spirituality in general" autocomplete="off">
+    </div>
+
     <label>Title <span class="hint">(required, read verbatim as the first line)</span></label>
     <input type="text" name="title" required placeholder="The One Sentence That Changes Everything">
 
@@ -172,6 +177,8 @@ function syncAuthor(){
   const a = AUTHOR_META[authorSel.value];
   document.getElementById('premise_hint').textContent = '(optional; blank = model picks — ' + a.hint + ')';
   document.getElementById('cta').placeholder = a.cta;
+  document.getElementById('custom_focus_wrap').style.display =
+      authorSel.value === 'custom' ? 'block' : 'none';
 }
 authorSel.addEventListener('change', syncAuthor); syncAuthor();
 const keyChoice = document.getElementById('api_key_choice');
@@ -309,7 +316,11 @@ def generate():
         "model_override": (d.get("model_override") or "").strip(),
         "do_images": bool(d.get("do_images", True)),
         "add_subscribe": bool(d.get("add_subscribe", False)),
+        "custom_focus": (d.get("custom_focus") or "").strip(),
     }
+    if author_key == "custom" and not params["custom_focus"]:
+        return jsonify({"error": "Type the custom topic or author (e.g. 'spirituality "
+                                  "in general') - nothing was generated."}), 400
     if (d.get("api_key_choice") or "kubko") == "custom":
         ck = (d.get("custom_api_key") or "").strip()
         if not ck.startswith("sk-ant-") or len(ck) < 30:

@@ -701,6 +701,103 @@ OUTPUT
 
 META_JUNG = 'You extract a structured mindmap + image-prompt package from a finished video script.\nReturn ONLY valid JSON. No markdown fences, no prose, no trailing commentary.\n\nThe JSON object must have exactly these fields:\n{\n  "premise": "a short multi-line block: the accurately quoted insight, then its attribution line exactly as the script gives it (e.g. \'- Carl Jung, Aion\' or \'- Nietzsche, Thus Spoke Zarathustra\'), then 2-4 short connecting lines that land emotionally (use real line breaks)",\n  "affirmation": "the exact three-part first-person present-tense assumption on its own lines, ending in \'I make the unconscious conscious\', then a blank line and 1-2 short grounding lines",\n  "affirmation_title": "a 2-4 word ALL-CAPS signature phrase for this video\'s affirmation branch (e.g. \'FACE THE SHADOW\')",\n  "cta": "the two-word comment phrase",\n  "keys": [\n    {\n      "title": "the key number + a short headline that matches the script\'s key exactly, e.g. \'1, Why one sentence is enough\'",\n      "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 full sentences that walk through the key IN ORDER, each covering its consecutive ~quarter of the key\'s text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script\'s OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter"],\n      "image_slot": "the visual CONCEPT from this key\'s [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",\n      "gemini_prompt": "a full image prompt that renders that concept, in the style below"\n    }\n  ],\n  "stepping_back": ["4-6 SHORT recap lines for the whole video, total under 500 characters. Do NOT write one full sentence per key - compress: each line is a tight clause, and one line may fold two keys together (semicolons welcome). It reads as one flowing \'here is the whole picture\' paragraph, like: \'one anchor is enough in a crisis; your supply was never money but God\'"],\n  "closing": ["ONLY the final closing lines that tie back to the title; do NOT include the affirmation or any product/channel pitch - those are added separately"],\n  "product_pitch": "(only if the video ends with a product pitch) reformat the script\'s closing pitch as: 1-2 short lead-in lines about why the product is needed, then a blank line, then a line \'★ <PRODUCT NAME IN CAPS> ★\', then 2-3 \'→ ...\' bullet lines including any price / refund / \'link in description\', with real line breaks. Empty string otherwise."\n}\n\nALIGNMENT (critical): everything must match the actual script.\n- The keys correspond ONE-TO-ONE and IN ORDER to the script\'s keys (each "the [ordinal] key is..." section). \'title\' and \'body\' summarize that exact key.\n- Take premise, affirmation, cta, stepping_back and closing from what the script actually says.\n- Base each key\'s image_slot and gemini_prompt on THAT key\'s own "[IMAGE: MASTER KEY N ...]" cue in the script — the picture must illustrate that specific idea.\n\nEach gemini_prompt renders the key\'s image cue as a cinematic teaching illustration that EXPLAINS the idea (a clear visual metaphor, a simple mechanism, a before-and-after contrast, or a labelled concept) — NEVER a random unrelated object, and NEVER flooded with text. Follow this exact style:\n\'A cinematic spiritual teaching illustration, 16:9, deep black background with a soft warm vignette, high production quality. Everything rendered in rich warm gold with a gentle glow, elegant and uncluttered. Title at top in gold serif capitals: "TITLE" (a 3 to 6 word teaching phrase capturing the key, like "THE DOOR STANDS OPEN" — not just one or two words). Central visual: <a clear visual metaphor that EXPLAINS the concept — show the transformation, contrast, or mechanism, not just a static object>. Where the idea is a contrast, render the old/negative side dim, muted and shadowed, and the true/positive side bright, warm and glowing gold, and label each side with one small gold word. Use at most 2 to 3 small gold label words inside the scene, and only where they make the idea clearer. A single gold caption line at the bottom — a fuller teaching sentence of about 6 to 12 words that states the lesson, like "at night the doubting guard sleeps - whatever you carry in takes root": "<caption>". Warm gold on black, cinematic and meaningful, lots of dark space, calm and never crowded with text.\'\n\n\'keys\' must contain EXACTLY the requested number of keys, in order.\nCRITICAL JSON RULE: inside every string value, use ONLY single quotes \' \' for any quoted words - NEVER double quotes - so the JSON stays valid and parseable.\nOutput raw JSON only.'
 
+
+
+def build_system_custom(p):
+    num = p["num_keys"]
+    num_word = "nine" if num == 9 else "six"
+    ending = p["ending"]
+    focus = (p.get("custom_focus") or "spirituality in general").strip()
+    product = p.get("product_name", "The Daily Practice")
+    funnel = p.get("funnel_channel", "Divine Manifestation")
+
+    if ending == "product":
+        ending_rule = (
+            f"ENDING = PRODUCT: after the LAST key, deliver a warm invitation to \"{product}\" "
+            f"(framed as the next step for those ready to live this daily), then the final affirmation."
+        )
+    elif ending == "funnel":
+        ending_rule = (
+            f"ENDING = FUNNEL: there is NO product. After Key 3 only, place a short two-sentence "
+            f"mention of a second channel called \"{funnel}\" (invite them to seek it out), "
+            f"then continue the remaining keys normally. End with pure teaching, no pitch."
+        )
+    else:
+        ending_rule = "ENDING = NONE: pure teaching, no product and no channel mention anywhere."
+
+    return f"""You are the ghostwriter for a faceless YouTube channel. THIS VIDEO'S FOCUS: {focus}. The TITLE states the exact promise of the video - teach precisely THAT theme, drawing on the focus above. Write in a calm, warm, wise teaching voice that naturally fits the focus.
+
+ABSOLUTE RULES
+- STAY PURE TO THE FOCUS. If the focus names a real teacher, author, or tradition, teach ONLY what that source authentically taught, attribute honestly ("<name> taught..."), and NEVER invent quotes - if you are not certain a quote is real, paraphrase it honestly ("he taught that..."). If the focus is a general theme (like spirituality in general), teach it with warmth and depth WITHOUT inventing a guru or fake authority, and attribute any real quote accurately.
+- NEVER mention Florence Scovel Shinn, Neville Goddard, Joseph Murphy, Louise Hay, Napoleon Hill, Emmet Fox, or Carl Jung unless the focus itself names them.
+- Speak metaphorically, never literally, on dark subjects, and keep all guidance safe and non-medical.
+- COMMAS ONLY. Use no periods anywhere in the spoken text. The whole script is one continuous flowing block joined by commas.
+- The very first spoken line is the TITLE, read verbatim.
+- Never speak the label "master key" out loud. Narration flows naturally: "the first key is...", "the second key is...".
+- BANNED PHRASES, never use any of these: "thank you very much for watching", "so I trust you found this helpful", "now let us look at the point of life", "good now hold that".
+
+STRUCTURE, in this exact order
+1. The title, verbatim, as the first spoken line.
+2. One quick bridge sentence introducing the theme in one breath.
+3. PREMISE, fast (about 40 seconds max) but meaningful: open with ONE fitting, genuinely real quote or verse for this theme (a Bible verse, a verified quote from a real teacher, or a traditional saying - named honestly), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
+4. PARTICIPATION AFFIRMATION, quick: a fresh three-part first-person present-tense affirmation that fits this theme, ending in a short memorable anchor phrase of your own creation (4-7 words) that you keep IDENTICAL every time it repeats. State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...". Derive the keys from THIS title's specific promise - each key teaches a DISTINCT idea of the theme, with concrete everyday examples.
+7. A brief recap beginning "here is the whole picture...".
+8. The ending block. {ending_rule}
+9. The final affirmation once more, then a short closing line tying back to the title.
+
+IMAGE CUES AND PAUSES
+- Immediately BEFORE each key, insert a line EXACTLY in this form:
+[IMAGE: MASTER KEY N - gold-on-black diagram: <short simple relatable gold-on-black visual for this key>]
+  where N is the key number.
+- Insert [long_pause] markers at each major section break.
+
+LENGTH — THIS IS A HARD REQUIREMENT
+- The spoken text MUST reach at least the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent. Never finish far under it, and do not overshoot it by more than about ten percent either.
+- Under-length scripts are rejected. Do NOT stop early. Keep teaching each key with real depth, concrete everyday relatable examples, and repeated restatement of the theme until the whole piece is long enough.
+- The later keys especially must be full and expansive, never summarized - there is no upper limit on them.
+
+OUTPUT
+- Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
+"""
+
+
+META_CUSTOM = """You extract a structured mindmap + image-prompt package from a finished video script.
+Return ONLY valid JSON. No markdown fences, no prose, no trailing commentary.
+
+The JSON object must have exactly these fields:
+{
+  "premise": "a short multi-line block: the opening quote or verse exactly as the script gives it, then its attribution line exactly as the script gives it, then 2-4 short connecting lines that land emotionally (use real line breaks)",
+  "affirmation": "the exact three-part affirmation on its own lines, keeping ITS OWN closing anchor phrase exactly as the script says it, then a blank line and 1-2 short grounding lines",
+  "affirmation_title": "a 2-4 word ALL-CAPS signature phrase for this video's affirmation branch (e.g. 'THE LAST SENTENCE')",
+  "cta": "the two-word comment phrase",
+  "keys": [
+    {
+      "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
+      "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
+      "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "gemini_prompt": "a full image prompt that renders that concept, in the style below"
+    }
+  ],
+  "stepping_back": ["4-6 SHORT recap lines for the whole video, total under 500 characters. Do NOT write one full sentence per key - compress: each line is a tight clause, and one line may fold two keys together (semicolons welcome). It reads as one flowing 'here is the whole picture' paragraph, like: 'one anchor is enough in a crisis; your supply was never money but God'"],
+  "closing": ["ONLY the final closing lines that tie back to the title; do NOT include the affirmation or any product/channel pitch - those are added separately"],
+  "product_pitch": "(only if the video ends with a product pitch) reformat the script's closing pitch as: 1-2 short lead-in lines about why the product is needed, then a blank line, then a line '★ THE OVERFLOW COVENANT ★', then 2-3 '→ ...' bullet lines including price / refund / 'link in description', with real line breaks. Empty string otherwise."
+}
+
+ALIGNMENT (critical): everything must match the actual script.
+- The keys correspond ONE-TO-ONE and IN ORDER to the script's keys (each "the [ordinal] key is..." section). 'title' and 'body' summarize that exact key.
+- Take premise, affirmation, cta, stepping_back and closing from what the script actually says.
+- Base each key's image_slot and gemini_prompt on THAT key's own "[IMAGE: MASTER KEY N ...]" cue in the script — the picture must illustrate that specific idea.
+
+Each gemini_prompt renders the key's image cue as a cinematic teaching illustration that EXPLAINS the idea (a clear visual metaphor, a simple mechanism, a before-and-after contrast, or a labelled concept) — NEVER a random unrelated object, and NEVER flooded with text. Follow this exact style:
+'A cinematic spiritual teaching illustration, 16:9, deep black background with a soft warm vignette, high production quality. Everything rendered in rich warm gold with a gentle glow, elegant and uncluttered. Title at top in gold serif capitals: "TITLE" (a 3 to 6 word teaching phrase capturing the key, like "THE DOOR STANDS OPEN" — not just one or two words). Central visual: <a clear visual metaphor that EXPLAINS the concept — show the transformation, contrast, or mechanism, not just a static object>. Where the idea is a contrast, render the old/negative side dim, muted and shadowed, and the true/positive side bright, warm and glowing gold, and label each side with one small gold word. Use at most 2 to 3 small gold label words inside the scene, and only where they make the idea clearer. A single gold caption line at the bottom — a fuller teaching sentence of about 6 to 12 words that states the lesson, like "at night the doubting guard sleeps - whatever you carry in takes root": "<caption>". Warm gold on black, cinematic and meaningful, lots of dark space, calm and never crowded with text.'
+
+'keys' must contain EXACTLY the requested number of keys, in order.
+CRITICAL JSON RULE: inside every string value, use ONLY single quotes ' ' for any quoted words - NEVER double quotes - so the JSON stays valid and parseable.
+Output raw JSON only."""
+
+
 AUTHORS = {
     "shinn": dict(anchor="my word is my wand", display='Florence Scovel Shinn', signature='- Florence Scovel Shinn',
         build_system=build_system_shinn, meta_system=META_SHINN,
@@ -737,4 +834,10 @@ AUTHORS = {
         cta_default='face it', product_default='The Inner Work Method', funnel_default='Divine Manifestation',
         premise_hint="a verified Jung insight or a thinker Jung drew on - Nietzsche, Goethe, Heraclitus... (no scripture)",
         product_pitch_fallback='Understanding the shadow is one thing - meeting it honestly day after day takes practice,\nthe old habit of projection has deep roots and returns the moment you are triggered.\n\n★ {PRODUCT} ★\n→ one guided reflection each day, projections, dreams, and the mask\n→ until honest self-knowledge is simply your natural way\n→ link in description.'),
+    "custom": dict(anchor="", display='Custom (any topic or author)', signature='- Spiritual Teaching',
+        build_system=build_system_custom, meta_system=META_CUSTOM,
+        cta_default="I'm ready", product_default='The Daily Practice', funnel_default='Divine Manifestation',
+        premise_hint='type the topic or author below - premise will be a real fitting quote or verse',
+        product_pitch_fallback='Knowing these ideas is one thing - living them daily is another,\nthe old habits have deep roots and return when life gets loud.\n\n★ {PRODUCT} ★\n→ a simple daily sequence to make this teaching your normal state\n→ link in description.'),
+
 }
