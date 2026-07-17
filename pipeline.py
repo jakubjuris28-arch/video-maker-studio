@@ -802,6 +802,10 @@ def run_pipeline(job_id, p, job, output_root):
     try:
         job["warnings"] = []
         cfg = load_env()
+        if p.get("custom_api_key"):
+            # the visitor's own key pays for this job; used in memory only,
+            # never written to disk or logs
+            cfg["ANTHROPIC_API_KEY"] = p["custom_api_key"]
         author = AUTHORS[p.get("author") or "shinn"]
         p["author"] = p.get("author") or "shinn"
         p["author_display"] = author["display"]

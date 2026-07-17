@@ -122,6 +122,14 @@ PAGE = """<!doctype html>
     <label>Extra instructions <span class="hint">(optional)</span></label>
     <textarea name="extra" placeholder=""></textarea>
 
+    <label>Anthropic API key <span class="hint">(whose balance pays for the script)</span></label>
+    <select name="api_key_choice" id="api_key_choice">
+      <option value="kubko">kubko (built-in)</option>
+      <option value="custom">my own key (paste below)</option>
+    </select>
+    <input type="text" name="custom_api_key" id="custom_api_key" placeholder="sk-ant-..."
+           style="display:none; margin-top:8px" autocomplete="off">
+
     <label>Model override <span class="hint">(optional; blank = .env default)</span></label>
     <input type="text" name="model_override" placeholder="claude-sonnet-5">
 
@@ -166,6 +174,11 @@ function syncAuthor(){
   document.getElementById('cta').placeholder = a.cta;
 }
 authorSel.addEventListener('change', syncAuthor); syncAuthor();
+const keyChoice = document.getElementById('api_key_choice');
+const customKey = document.getElementById('custom_api_key');
+keyChoice.addEventListener('change', () => {
+  customKey.style.display = keyChoice.value === 'custom' ? 'block' : 'none';
+});
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -297,6 +310,12 @@ def generate():
         "do_images": bool(d.get("do_images", True)),
         "add_subscribe": bool(d.get("add_subscribe", False)),
     }
+    if (d.get("api_key_choice") or "kubko") == "custom":
+        ck = (d.get("custom_api_key") or "").strip()
+        if not ck.startswith("sk-ant-") or len(ck) < 30:
+            return jsonify({"error": "That doesn't look like an Anthropic API key "
+                                      "(it starts with sk-ant-...). Nothing was generated."}), 400
+        params["custom_api_key"] = ck
 
     _cleanup_output()
     job_id = uuid.uuid4().hex[:12]
