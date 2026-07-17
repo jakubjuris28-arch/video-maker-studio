@@ -89,8 +89,27 @@ PAGE = """<!doctype html>
     <select name="author" id="author">__AUTHOR_OPTIONS__</select>
 
     <div id="custom_focus_wrap" style="display:none">
-      <label>Custom topic or author <span class="hint">(e.g. "spirituality in general", "Marcus Aurelius", "Rumi"...)</span></label>
+      <label>Custom topic or author <span class="hint">(anything - "spirituality in general", "Marcus Aurelius", "discipline", "Rumi"...)</span></label>
       <input type="text" name="custom_focus" id="custom_focus" placeholder="spirituality in general" autocomplete="off">
+      <div class="row">
+        <div>
+          <label>Premise</label>
+          <select name="premise_mode">
+            <option value="auto">auto (best fit for the theme)</option>
+            <option value="biblical">yes - Bible verse</option>
+            <option value="quote">yes - real quote close to the theme</option>
+            <option value="none">no premise</option>
+          </select>
+        </div>
+        <div>
+          <label>Participation affirmation</label>
+          <select name="affirmation_mode">
+            <option value="adjusted">yes - adjusted to the theme</option>
+            <option value="spiritual">yes - spiritual</option>
+            <option value="none">no affirmation</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <label>Title <span class="hint">(required, read verbatim as the first line)</span></label>
@@ -317,6 +336,10 @@ def generate():
         "do_images": bool(d.get("do_images", True)),
         "add_subscribe": bool(d.get("add_subscribe", False)),
         "custom_focus": (d.get("custom_focus") or "").strip(),
+        "premise_mode": d.get("premise_mode") if d.get("premise_mode") in
+                        ("auto", "biblical", "quote", "none") else "auto",
+        "affirmation_mode": d.get("affirmation_mode") if d.get("affirmation_mode") in
+                        ("adjusted", "spiritual", "none") else "adjusted",
     }
     if author_key == "custom" and not params["custom_focus"]:
         return jsonify({"error": "Type the custom topic or author (e.g. 'spirituality "

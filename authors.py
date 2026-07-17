@@ -725,7 +725,41 @@ def build_system_custom(p):
     else:
         ending_rule = "ENDING = NONE: pure teaching, no product and no channel mention anywhere."
 
-    return f"""You are the ghostwriter for a faceless YouTube channel. THIS VIDEO'S FOCUS: {focus}. The TITLE states the exact promise of the video - teach precisely THAT theme, drawing on the focus above. Write in a calm, warm, wise teaching voice that naturally fits the focus.
+    pm = p.get("premise_mode", "auto")
+    if pm == "biblical":
+        premise_rule = ('3. PREMISE, fast (about 40 seconds max) but meaningful: open with ONE fitting, real '
+                        'BIBLE VERSE (book chapter:verse named), quote it, one connecting line that lands '
+                        'emotionally. Do NOT teach at length here.')
+    elif pm == "quote":
+        premise_rule = ('3. PREMISE, fast (about 40 seconds max) but meaningful: open with ONE genuinely real, '
+                        'verifiable QUOTE close to this theme (a real thinker, teacher, or traditional saying - '
+                        'named honestly, never invented), quote it, one connecting line that lands emotionally. '
+                        'Do NOT teach at length here.')
+    elif pm == "none":
+        premise_rule = '3. NO premise section - after the bridge sentence, move straight toward the keys.'
+    else:
+        premise_rule = ('3. PREMISE, fast (about 40 seconds max) but meaningful: open with ONE fitting, '
+                        'genuinely real quote or verse for this theme (a Bible verse, a verified quote from a '
+                        'real teacher, or a traditional saying - named honestly), quote it, one connecting line '
+                        'that lands emotionally. Do NOT teach at length here.')
+
+    am = p.get("affirmation_mode", "adjusted")
+    if am == "none":
+        affirmation_rule = '4. NO participation affirmation in this video - do not include one anywhere.'
+        closing_rule = '9. A short closing line tying back to the title.'
+    else:
+        flavor = ('a SPIRITUAL affirmation, in soul-and-spirit language that fits the theme'
+                  if am == "spiritual" else
+                  "an affirmation written in the plain natural language of THIS theme (no religious "
+                  "vocabulary unless the theme itself is religious)")
+        affirmation_rule = (f'4. PARTICIPATION AFFIRMATION, quick: a fresh three-part first-person '
+                            f'present-tense affirmation - {flavor} - ending in a short memorable anchor '
+                            f'phrase of your own creation (4-7 words) that you keep IDENTICAL every time '
+                            f'it repeats. State it, say "say it with me", say it "again", repeat it once. '
+                            f'Land this within the first 60 to 70 seconds.')
+        closing_rule = '9. The final affirmation once more, then a short closing line tying back to the title.'
+
+    return f"""You are the ghostwriter for a faceless YouTube channel. THIS VIDEO'S FOCUS: {focus}. The TITLE states the exact promise of the video - teach precisely THAT theme, drawing on the focus above. Write in a clear, engaging teaching voice that naturally fits the focus - warm and wise for spiritual themes, sharp and grounded for practical or intellectual ones. ANY topic works here: the theme in the title is the boss.
 
 ABSOLUTE RULES
 - STAY PURE TO THE FOCUS. If the focus names a real teacher, author, or tradition, teach ONLY what that source authentically taught, attribute honestly ("<name> taught..."), and NEVER invent quotes - if you are not certain a quote is real, paraphrase it honestly ("he taught that..."). If the focus is a general theme (like spirituality in general), teach it with warmth and depth WITHOUT inventing a guru or fake authority, and attribute any real quote accurately.
@@ -739,13 +773,13 @@ ABSOLUTE RULES
 STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence introducing the theme in one breath.
-3. PREMISE, fast (about 40 seconds max) but meaningful: open with ONE fitting, genuinely real quote or verse for this theme (a Bible verse, a verified quote from a real teacher, or a traditional saying - named honestly), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh three-part first-person present-tense affirmation that fits this theme, ending in a short memorable anchor phrase of your own creation (4-7 words) that you keep IDENTICAL every time it repeats. State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+{premise_rule}
+{affirmation_rule}
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...". Derive the keys from THIS title's specific promise - each key teaches a DISTINCT idea of the theme, with concrete everyday examples.
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
-9. The final affirmation once more, then a short closing line tying back to the title.
+{closing_rule}
 
 IMAGE CUES AND PAUSES
 - Immediately BEFORE each key, insert a line EXACTLY in this form:
@@ -768,8 +802,8 @@ Return ONLY valid JSON. No markdown fences, no prose, no trailing commentary.
 
 The JSON object must have exactly these fields:
 {
-  "premise": "a short multi-line block: the opening quote or verse exactly as the script gives it, then its attribution line exactly as the script gives it, then 2-4 short connecting lines that land emotionally (use real line breaks)",
-  "affirmation": "the exact three-part affirmation on its own lines, keeping ITS OWN closing anchor phrase exactly as the script says it, then a blank line and 1-2 short grounding lines",
+  "premise": "a short multi-line block: the opening quote or verse exactly as the script gives it, then its attribution line exactly as the script gives it, then 2-4 short connecting lines that land emotionally (use real line breaks). If the script has NO premise, return an empty string",
+  "affirmation": "the exact three-part affirmation on its own lines, keeping ITS OWN closing anchor phrase exactly as the script says it, then a blank line and 1-2 short grounding lines. If the script has NO affirmation, return an empty string",
   "affirmation_title": "a 2-4 word ALL-CAPS signature phrase for this video's affirmation branch (e.g. 'THE LAST SENTENCE')",
   "cta": "the two-word comment phrase",
   "keys": [

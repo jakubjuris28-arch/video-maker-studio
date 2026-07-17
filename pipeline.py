@@ -521,7 +521,8 @@ def build_xmind(path, title, num_keys, ending, meta, images,
                 funnel_channel="Divine Manifestation",
                 signature="- Unknown Author",
                 product_fallback="★ {PRODUCT} ★\n→ link in description.",
-                anchor="my word is my wand"):
+                anchor="my word is my wand",
+                premise_on=True, affirmation_on=True):
     """Write a valid .xmind zip in the LOCKED reference style.
 
     images: dict {index -> png_bytes} for keys that got an image.
@@ -597,7 +598,8 @@ def build_xmind(path, title, num_keys, ending, meta, images,
         closing_parts.append(f"{product_name} builds this day by day - link below.")
     elif ending == "funnel":
         closing_parts.append(f"Go deeper on the second channel, {funnel_channel} - link below.")
-    closing_parts.append(f"'{final_aff}'")
+    if affirmation_on:
+        closing_parts.append(f"'{final_aff}'")
     closing_full = "\n\n".join(p for p in closing_parts if p)
 
     # ---- video-title branch: keys -> Stepping Back -> (funnel late) -> Closing ----
@@ -630,7 +632,15 @@ def build_xmind(path, title, num_keys, ending, meta, images,
     premise_branch = _topic("Premise",
                             children=[_topic(premise, custom_width=490, folded=True)])
 
-    branches = [premise_branch, aff_branch]
+    branches = []
+    if premise_on:
+        branches.append(premise_branch)
+    if affirmation_on:
+        branches.append(aff_branch)
+    elif cta:
+        # no affirmation block, but the comment CTA still gets its node
+        branches.append(_topic("Comment CTA", children=[
+            _topic(f'Type two words:\n"{cta}"', custom_width=340, folded=True)]))
     if ending == "funnel":
         branches.append(funnel_early)   # early top-level mention
     branches.append(title_branch)
@@ -1088,6 +1098,8 @@ def run_pipeline(job_id, p, job, output_root):
         build_xmind(xmind_path, title, p["num_keys"], p["ending"], meta, images,
                     product_name=p["product_name"], funnel_channel=p["funnel_channel"],
                     signature=signature,
+                    premise_on=p.get("premise_mode", "auto") != "none",
+                    affirmation_on=p.get("affirmation_mode", "adjusted") != "none",
                     product_fallback=author["product_pitch_fallback"],
                     anchor=author.get("anchor", ""))
 
