@@ -610,9 +610,13 @@ def download_remote(job_id, filename):
                          "Accept": "application/vnd.github.raw+json"}, timeout=120)
     if r.status_code != 200:
         abort(404)
-    from flask import Response
-    return Response(r.content, mimetype="application/octet-stream",
-                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    # serve via send_file with conditional=True so Range requests (download
+    # managers, resumed downloads) get proper 206 responses instead of looping
+    from io import BytesIO
+    from flask import send_file
+    return send_file(BytesIO(r.content), as_attachment=True,
+                     download_name=filename,
+                     mimetype="application/octet-stream", conditional=True)
 
 
 @app.route("/download/<job_id>/<path:filename>")
