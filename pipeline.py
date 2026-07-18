@@ -50,7 +50,8 @@ def load_env(path=None):
     # real environment overrides file
     for k, v in os.environ.items():
         if k in ("MODEL", "ANTHROPIC_API_KEY", "KEYAI_API_KEY", "KEYAI_ENDPOINT",
-                 "KEYAI_MODEL", "KEYAI_SIZE", "KEYAI_ASPECT", "KEYAI_OUTPUT_FORMAT") \
+                 "KEYAI_MODEL", "KEYAI_SIZE", "KEYAI_ASPECT", "KEYAI_OUTPUT_FORMAT",
+                 "GITHUB_TOKEN", "STORAGE_REPO") \
                 or k.startswith("PRODUCT_NAME") or k.startswith("FUNNEL_CHANNEL"):
             cfg[k] = v
     return cfg
@@ -189,6 +190,92 @@ def build_expand_user(p, script, current_chars):
         f"NOT summarize.\n\nReturn ONLY the complete expanded script.\n\n"
         f"CURRENT DRAFT:\n{script}"
     )
+
+
+# --------------------------------------------------------------------------
+# permanent archive in a private GitHub repo (survives free-tier disk wipes)
+# --------------------------------------------------------------------------
+def _gh(cfg, method, path, **kw):
+    tok = cfg.get("GITHUB_TOKEN")
+    repo = cfg.get("STORAGE_REPO")
+    if not tok or not repo:
+        return None
+    url = f"https://api.github.com/repos/{repo}/{path}"
+    r = requests.request(method, url, timeout=60,
+                         headers={"Authorization": f"Bearer {tok}",
+                                  "Accept": "application/vnd.github+json"}, **kw)
+    return r
+
+
+def archive_index(cfg):
+    """Read the archive index; returns (entries, sha) - ([], None) if empty/off."""
+    r = _gh(cfg, "GET", "contents/index.json")
+    if r is None or r.status_code != 200:
+        return [], None
+    d = r.json()
+    try:
+        entries = json.loads(base64.b64decode(d["content"]).decode("utf-8"))
+    except Exception:
+        entries = []
+    return entries, d.get("sha")
+
+
+def _archive_put(cfg, path, data_bytes, message, sha=None):
+    body = {"message": message,
+            "content": base64.b64encode(data_bytes).decode("ascii")}
+    if sha:
+        body["sha"] = sha
+    r = _gh(cfg, "PUT", f"contents/{path}", json=body)
+    return r is not None and r.status_code in (200, 201)
+
+
+def archive_job(cfg, job_id, title, author_display, file_paths, warn):
+    """Upload the finished video's files + register it in index.json."""
+    if not cfg.get("GITHUB_TOKEN") or not cfg.get("STORAGE_REPO"):
+        return
+    try:
+        names = []
+        for fp in file_paths:
+            name = os.path.basename(fp)
+            with open(fp, "rb") as fh:
+                if not _archive_put(cfg, f"jobs/{job_id}/{name}", fh.read(),
+                                    f"archive {job_id}/{name}"):
+                    warn(f"Cloud archive: upload of {name} failed.")
+                    return
+            names.append(name)
+        entries, sha = archive_index(cfg)
+        entries.append({"id": job_id, "title": title, "author": author_display,
+                        "ts": time.time(), "files": names})
+        _archive_put(cfg, "index.json",
+                     json.dumps(entries, ensure_ascii=False, indent=0).encode("utf-8"),
+                     f"index + {job_id}", sha)
+    except Exception as e:
+        warn(f"Cloud archive failed: {e}")
+
+
+def archive_prune(cfg, keep_days):
+    """Drop index entries older than keep_days and delete their files."""
+    try:
+        entries, sha = archive_index(cfg)
+        if not entries:
+            return
+        cutoff = time.time() - keep_days * 86400
+        keep, drop = [], []
+        for e in entries:
+            (keep if e.get("ts", 0) >= cutoff else drop).append(e)
+        if not drop:
+            return
+        for e in drop:
+            for name in e.get("files", []):
+                r = _gh(cfg, "GET", f"contents/jobs/{e['id']}/{name}")
+                if r is not None and r.status_code == 200:
+                    _gh(cfg, "DELETE", f"contents/jobs/{e['id']}/{name}",
+                        json={"message": f"prune {e['id']}", "sha": r.json()["sha"]})
+        _archive_put(cfg, "index.json",
+                     json.dumps(keep, ensure_ascii=False, indent=0).encode("utf-8"),
+                     "prune old entries", sha)
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------
@@ -868,6 +955,34 @@ def run_pipeline(job_id, p, job, output_root):
         # generous token headroom (~4 chars/token) so length is never capped
         max_tokens = min(int(target / 2.6), 32000)
         script = call_anthropic(cfg, model, system, build_script_user(p), max_tokens)
+
+        # format guard: every key needs its cue line and the recap needs its
+        # locked opener - repair once before any length machinery runs
+        cues = len(KEY_CUE_RE.findall(script))
+        if cues != p["num_keys"] or not RECAP_RE.search(script):
+            job.update(stage=f"Repairing format ({cues}/{p['num_keys']} image cues)...",
+                       progress=12)
+            try:
+                fixed = call_anthropic(
+                    cfg, model, system,
+                    (f"This script violates the locked format: it has {cues} [IMAGE: MASTER KEY N ...] "
+                     f"cue lines but must have exactly {p['num_keys']} (numbered 1 to {p['num_keys']}, "
+                     f"one immediately before each key), and the recap must begin with the exact words "
+                     f"'here is the whole picture'. FIX ONLY THAT: insert the missing cue lines in the "
+                     f"right places (write a fitting gold-on-black visual for each) and make the recap "
+                     f"begin with those exact words. Change NOTHING else - same wording, same length, "
+                     f"same order, commas only. Return ONLY the corrected script.\n\n"
+                     f"SCRIPT:\n{script}"),
+                    min(int(len(script) / 2.6) + 2000, 32000))
+                if (len(KEY_CUE_RE.findall(fixed)) == p["num_keys"]
+                        and RECAP_RE.search(fixed)
+                        and abs(spoken_len(fixed) - spoken_len(script)) < 0.15 * max(spoken_len(script), 1)):
+                    script = fixed
+                else:
+                    job["warnings"].append(
+                        f"Format repair incomplete ({len(KEY_CUE_RE.findall(fixed))} cues after fix).")
+            except Exception as e:
+                job["warnings"].append(f"Format repair failed: {e}")
         stats = compute_stats(script)
 
         # per-key expansion: one-pass generation stalls well under long targets.
@@ -1182,6 +1297,9 @@ def run_pipeline(job_id, p, job, output_root):
             "stats": stats,
             "slug": slug,
         }
+        job.update(stage="Archiving to permanent storage...", progress=97)
+        archive_job(cfg, job_id, title, p["author_display"],
+                    [script_path, xmind_path], job["warnings"].append)
         job.update(stage="Done", progress=100, status="done")
 
     except Exception as e:

@@ -221,6 +221,33 @@ function syncAuthor(){
   syncPremiseInput();
 }
 premiseSel.addEventListener('change', syncPremiseInput);
+
+// remember every setting exactly as the user left it (survives back/reload)
+const FIELDS = ['author','custom_focus','title','target_chars','num_keys','ending',
+                'cta_choice','cta','premise_choice','scripture','affirmation_choice',
+                'extra','api_key_choice','model_override','do_images','add_subscribe'];
+function saveForm(){
+  const st = {};
+  FIELDS.forEach(n => { const el = form[n]; if (!el) return;
+    st[n] = el.type === 'checkbox' ? el.checked : el.value; });
+  try { localStorage.setItem('vms_form', JSON.stringify(st)); } catch(e){}
+}
+function restoreForm(){
+  let st = null;
+  try { st = JSON.parse(localStorage.getItem('vms_form') || 'null'); } catch(e){}
+  if (!st) return;
+  if (st.author && AUTHOR_META[st.author]) { form.author.value = st.author; }
+  syncAuthor();
+  FIELDS.forEach(n => { const el = form[n]; if (!el || st[n] === undefined || n === 'author') return;
+    if (el.type === 'checkbox') el.checked = !!st[n]; else el.value = st[n]; });
+  syncPremiseInput();
+  document.getElementById('cta').style.display =
+      form.cta_choice.value === 'own' ? 'block' : 'none';
+  document.getElementById('custom_api_key').style.display =
+      form.api_key_choice.value === 'custom' ? 'block' : 'none';
+}
+form.addEventListener('input', saveForm);
+form.addEventListener('change', saveForm);
 document.getElementById('cta_choice').addEventListener('change', function(){
   document.getElementById('cta').style.display = this.value === 'own' ? 'block' : 'none';
 });
@@ -301,6 +328,7 @@ function showResults(jobId, j){
   (j.warnings||[]).forEach(x => { w += '<div class="warn">&#9888; '+x+'</div>'; });
   document.getElementById('warnings').innerHTML = w;
 }
+restoreForm();
 </script>
 </body>
 </html>"""
@@ -474,18 +502,38 @@ def videos():
             })
     except Exception:
         pass
+    # merge the permanent cloud archive (private GitHub repo), if configured
+    try:
+        cfg = pipeline.load_env()
+        pipeline.archive_prune(cfg, KEEP_DAYS)
+        local_ids = {j["id"] for j in jobs}
+        entries, _sha = pipeline.archive_index(cfg)
+        for e in entries:
+            if e.get("id") in local_ids:
+                continue
+            script = next((f for f in e.get("files", []) if f.endswith("_RECORDING.txt")), None)
+            xmind = next((f for f in e.get("files", []) if f.endswith(".xmind")), None)
+            jobs.append({
+                "id": e["id"], "title": (e.get("title") or "") + " ☁",
+                "author": e.get("author", ""),
+                "age_h": (_t.time() - e.get("ts", _t.time())) / 3600,
+                "script": script, "xmind": xmind, "remote": True,
+            })
+    except Exception:
+        pass
     jobs.sort(key=lambda j: j["age_h"])
 
     rows = []
     for j in jobs:
         age = f"{j['age_h']:.1f} h ago" if j["age_h"] < 48 else f"{j['age_h']/24:.1f} days ago"
         meta_line = " &middot; ".join(x for x in (j["author"], age) if x)
+        base = "/download_remote" if j.get("remote") else "/download"
         links = ""
         if j["script"]:
-            links += (f'<a class="dl" href="/download/{j["id"]}/{j["script"]}">'
+            links += (f'<a class="dl" href="{base}/{j["id"]}/{j["script"]}">'
                       f'&#128220; Script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
         if j["xmind"]:
-            links += (f'<a class="dl" href="/download/{j["id"]}/{j["xmind"]}">'
+            links += (f'<a class="dl" href="{base}/{j["id"]}/{j["xmind"]}">'
                       f'&#128506; Mindmap <span style="color:#777;font-size:12px">({j["xmind"]})</span></a>')
         rows.append(
             f'<details class="panel" style="cursor:pointer">'
@@ -501,6 +549,25 @@ def videos():
 <p style="color:#999;font-size:13px">Every generated script and mindmap is kept here for {KEEP_DAYS*24:g} hours, then deleted automatically.
 On the free cloud server the storage is also cleared whenever the server restarts or updates - download anything important right away; the local app keeps the full {KEEP_DAYS*24:g} hours reliably.</p>
 {body}</div></body></html>"""
+
+
+@app.route("/download_remote/<job_id>/<path:filename>")
+def download_remote(job_id, filename):
+    if "/" in filename or ".." in filename or "/" in job_id or ".." in job_id:
+        abort(400)
+    cfg = pipeline.load_env()
+    tok, repo = cfg.get("GITHUB_TOKEN"), cfg.get("STORAGE_REPO")
+    if not tok or not repo:
+        abort(404)
+    import requests as _rq
+    r = _rq.get(f"https://api.github.com/repos/{repo}/contents/jobs/{job_id}/{filename}",
+                headers={"Authorization": f"Bearer {tok}",
+                         "Accept": "application/vnd.github.raw+json"}, timeout=120)
+    if r.status_code != 200:
+        abort(404)
+    from flask import Response
+    return Response(r.content, mimetype="application/octet-stream",
+                    headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
 @app.route("/download/<job_id>/<path:filename>")
