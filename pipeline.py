@@ -160,6 +160,15 @@ def call_anthropic(cfg, model, system, user_content, max_tokens, strict=False):
 def build_script_system(p):
     """Dispatch to the selected author's locked script format."""
     s = AUTHORS[p["author"]]["build_system"](p)
+    n = p["num_keys"]
+    s += (f"\n\nFINAL SELF-CHECK before you finish - all three must hold or the "
+          f"script is rejected:\n"
+          f"1. EXACTLY {n} keys, each opening with its ordinal ('the first key is...' "
+          f"through the {n}th), never fewer, never merged.\n"
+          f"2. EXACTLY {n} cue lines of the form [IMAGE: MASTER KEY N ...], numbered "
+          f"1 to {n}, one immediately before each key.\n"
+          f"3. The recap begins with the exact words 'here is the whole picture', and "
+          f"the spoken text contains zero periods.")
     if p.get("cta_none"):
         s = re.sub(r"(?m)^5\. A SHORT comment call to action.*$",
                    "5. No comment call to action in this video - never ask viewers "
@@ -201,10 +210,19 @@ def _gh(cfg, method, path, **kw):
     if not tok or not repo:
         return None
     url = f"https://api.github.com/repos/{repo}/{path}"
-    r = requests.request(method, url, timeout=60,
-                         headers={"Authorization": f"Bearer {tok}",
-                                  "Accept": "application/vnd.github+json"}, **kw)
-    return r
+    last = None
+    for attempt in range(3):   # transient GitHub hiccups shouldn't lose a video
+        if attempt:
+            time.sleep(3 * attempt)
+        try:
+            last = requests.request(method, url, timeout=60,
+                                    headers={"Authorization": f"Bearer {tok}",
+                                             "Accept": "application/vnd.github+json"}, **kw)
+        except requests.RequestException:
+            continue
+        if last.status_code < 500:
+            return last
+    return last
 
 
 def archive_index(cfg):
@@ -956,33 +974,66 @@ def run_pipeline(job_id, p, job, output_root):
         max_tokens = min(int(target / 2.6), 32000)
         script = call_anthropic(cfg, model, system, build_script_user(p), max_tokens)
 
-        # format guard: every key needs its cue line and the recap needs its
-        # locked opener - repair once before any length machinery runs
-        cues = len(KEY_CUE_RE.findall(script))
-        if cues != p["num_keys"] or not RECAP_RE.search(script):
-            job.update(stage=f"Repairing format ({cues}/{p['num_keys']} image cues)...",
-                       progress=12)
-            try:
-                fixed = call_anthropic(
-                    cfg, model, system,
-                    (f"This script violates the locked format: it has {cues} [IMAGE: MASTER KEY N ...] "
-                     f"cue lines but must have exactly {p['num_keys']} (numbered 1 to {p['num_keys']}, "
-                     f"one immediately before each key), and the recap must begin with the exact words "
-                     f"'here is the whole picture'. FIX ONLY THAT: insert the missing cue lines in the "
-                     f"right places (write a fitting gold-on-black visual for each) and make the recap "
-                     f"begin with those exact words. Change NOTHING else - same wording, same length, "
-                     f"same order, commas only. Return ONLY the corrected script.\n\n"
-                     f"SCRIPT:\n{script}"),
-                    min(int(len(script) / 2.6) + 2000, 32000))
-                if (len(KEY_CUE_RE.findall(fixed)) == p["num_keys"]
-                        and RECAP_RE.search(fixed)
-                        and abs(spoken_len(fixed) - spoken_len(script)) < 0.15 * max(spoken_len(script), 1)):
-                    script = fixed
-                else:
-                    job["warnings"].append(
-                        f"Format repair incomplete ({len(KEY_CUE_RE.findall(fixed))} cues after fix).")
-            except Exception as e:
-                job["warnings"].append(f"Format repair failed: {e}")
+        # format guard: the script must have exactly num_keys keys (each with
+        # its cue line) and the locked recap opener. Repair can SPLIT oversized
+        # keys into real new ones; if repair fails, regenerate once.
+        def _format_ok(sc):
+            return (len(KEY_CUE_RE.findall(sc)) == p["num_keys"]
+                    and bool(RECAP_RE.search(sc)))
+
+        for gen_try in range(2):
+            if _format_ok(script):
+                break
+            for rep_try in range(2):
+                cues = len(KEY_CUE_RE.findall(script))
+                job.update(stage=f"Repairing format ({cues}/{p['num_keys']} keys, "
+                                 f"attempt {rep_try + 1})...", progress=12)
+                try:
+                    fixed = call_anthropic(
+                        cfg, model, system,
+                        (f"This script violates the locked format: it has {cues} "
+                         f"[IMAGE: MASTER KEY N ...] cue lines / key sections but must have "
+                         f"EXACTLY {p['num_keys']} keys. Fix it while keeping all the "
+                         f"teaching content:\n"
+                         f"- If there are fewer than {p['num_keys']} keys, SPLIT the longest "
+                         f"keys into two real keys each at a natural point, giving every key "
+                         f"its own ordinal opener ('the third key is...') and its own "
+                         f"[IMAGE: MASTER KEY N ...] cue line, renumbering so the ordinals and "
+                         f"cue numbers run 1 to {p['num_keys']} in order.\n"
+                         f"- If a cue line is merely missing, insert it immediately before its key "
+                         f"(write a fitting gold-on-black visual).\n"
+                         f"- The recap must begin with the exact words 'here is the whole picture'.\n"
+                         f"- Commas only, no periods, and change nothing else.\n"
+                         f"Return ONLY the corrected script.\n\nSCRIPT:\n{script}"),
+                        min(int(len(script) / 2.6) + 3000, 32000))
+                    if (_format_ok(fixed)
+                            and spoken_len(fixed) > 0.8 * spoken_len(script)):
+                        script = fixed
+                        break
+                except Exception as e:
+                    job["warnings"].append(f"Format repair failed: {e}")
+                    break
+            if _format_ok(script):
+                break
+            if gen_try == 0:
+                job.update(stage="Format still wrong - regenerating the script...",
+                           progress=10)
+                try:
+                    script = call_anthropic(
+                        cfg, model, system,
+                        build_script_user(p) +
+                        f"\n\nCRITICAL: the previous attempt produced the wrong number of "
+                        f"keys. This script MUST contain exactly {p['num_keys']} keys, each "
+                        f"with its own [IMAGE: MASTER KEY N ...] cue line, numbered 1 to "
+                        f"{p['num_keys']}.",
+                        max_tokens)
+                except Exception as e:
+                    job["warnings"].append(f"Regeneration failed: {e}")
+                    break
+        if not _format_ok(script):
+            job["warnings"].append(
+                f"Format still imperfect after repair + regeneration "
+                f"({len(KEY_CUE_RE.findall(script))}/{p['num_keys']} keys).")
         stats = compute_stats(script)
 
         # per-key expansion: one-pass generation stalls well under long targets.
