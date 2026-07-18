@@ -86,6 +86,12 @@ PAGE = """<!doctype html>
   <p class="sub">Faceless video packages &mdash; pick the author, type the title, get script + mindmap.</p>
 
   <form id="form">
+    <label>Video type</label>
+    <select name="video_type" id="video_type">
+      <option value="teaching">Teaching (keys + mindmap)</option>
+      <option value="sleep">Sleep / Meditation (hypnotic journey)</option>
+    </select>
+
     <label>Author <span class="hint">(each has their own locked script format)</span></label>
     <select name="author" id="author">__AUTHOR_OPTIONS__</select>
 
@@ -102,11 +108,20 @@ PAGE = """<!doctype html>
         <label>Target length <span class="hint">(chars; 850 &asymp; 1 min)</span></label>
         <input type="number" name="target_chars" value="40000">
       </div>
-      <div>
-        <label>Number of keys</label>
+      <div id="numkeys_wrap">
+        <label>Number of sections</label>
         <select name="num_keys"><option value="9">9</option><option value="6">6</option></select>
       </div>
-      <div>
+      <div id="unit_wrap">
+        <label>Call them</label>
+        <select name="unit_word">
+          <option value="keys">keys (classic)</option>
+          <option value="decrees">decrees</option>
+          <option value="signs">signs</option>
+          <option value="laws">laws</option>
+        </select>
+      </div>
+      <div id="ending_wrap">
         <label>Ending type</label>
         <select name="ending">
           <option value="product">product (course pitch)</option>
@@ -121,13 +136,17 @@ PAGE = """<!doctype html>
     <input type="text" name="cta" id="cta" placeholder="two words"
            style="display:none; margin-top:8px" autocomplete="off">
 
+    <div id="premise_wrap">
     <label>Premise <span class="hint" id="premise_hint">(choose - no writing needed)</span></label>
     <select name="premise_choice" id="premise_choice"></select>
     <input type="text" name="scripture" id="scripture_input" placeholder="type your premise / verse / quote here"
            style="display:none; margin-top:8px" autocomplete="off">
+    </div>
 
+    <div id="affirmation_wrap">
     <label>Participation affirmation <span class="hint">(choose - some niches don't need one)</span></label>
     <select name="affirmation_choice" id="affirmation_choice"></select>
+    </div>
 
     <label>Extra instructions <span class="hint">(optional)</span></label>
     <textarea name="extra" placeholder=""></textarea>
@@ -148,7 +167,7 @@ PAGE = """<!doctype html>
       <label for="do_images">Generate images via KeyAI and embed them</label>
     </div>
 
-    <div class="check">
+    <div class="check" id="subscribe_wrap">
       <input type="checkbox" name="add_subscribe" id="add_subscribe">
       <label for="add_subscribe">Add a short subscribe reminder (after the affirmation, in the author's voice)</label>
     </div>
@@ -221,9 +240,18 @@ function syncAuthor(){
   syncPremiseInput();
 }
 premiseSel.addEventListener('change', syncPremiseInput);
+const videoType = document.getElementById('video_type');
+function syncVideoType(){
+  const sleep = videoType.value === 'sleep';
+  ['numkeys_wrap','unit_wrap','ending_wrap','premise_wrap','affirmation_wrap','subscribe_wrap']
+    .forEach(id => { const el = document.getElementById(id);
+                     if (el) el.style.display = sleep ? 'none' : ''; });
+}
+videoType.addEventListener('change', syncVideoType);
+syncVideoType();
 
 // remember every setting exactly as the user left it (survives back/reload)
-const FIELDS = ['author','custom_focus','title','target_chars','num_keys','ending',
+const FIELDS = ['video_type','author','custom_focus','title','target_chars','num_keys','unit_word','ending',
                 'cta_choice','cta','premise_choice','scripture','affirmation_choice',
                 'extra','api_key_choice','model_override','do_images','add_subscribe'];
 function saveForm(){
@@ -241,6 +269,7 @@ function restoreForm(){
   FIELDS.forEach(n => { const el = form[n]; if (!el || st[n] === undefined || n === 'author') return;
     if (el.type === 'checkbox') el.checked = !!st[n]; else el.value = st[n]; });
   syncPremiseInput();
+  syncVideoType();
   document.getElementById('cta').style.display =
       form.cta_choice.value === 'own' ? 'block' : 'none';
   document.getElementById('custom_api_key').style.display =
@@ -393,6 +422,10 @@ def generate():
         "do_images": bool(d.get("do_images", True)),
         "add_subscribe": bool(d.get("add_subscribe", False)),
         "custom_focus": (d.get("custom_focus") or "").strip(),
+        "unit_word": d.get("unit_word") if d.get("unit_word") in
+                     ("keys", "decrees", "signs", "laws") else "keys",
+        "video_type": d.get("video_type") if d.get("video_type") in
+                      ("teaching", "sleep") else "teaching",
         "premise_mode": d.get("premise_choice") if d.get("premise_choice") in
                         ("auto", "biblical", "quote", "none") else "auto",
         "affirmation_mode": d.get("affirmation_choice") if d.get("affirmation_choice") in

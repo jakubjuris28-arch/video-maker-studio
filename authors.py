@@ -70,6 +70,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -164,6 +165,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -261,6 +263,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -357,6 +360,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -454,6 +458,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -553,6 +558,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -668,6 +674,17 @@ VARIETY RULES (every script):
 - BANNED PHRASES, never use any of these: "by that it is meant", "by grace and grace alone", "bridge of incidence", "thank you very much for watching", "so I trust you found this helpful", "now let us look at the point of life", "good now hold that", "the law of attraction", "vibration", "frequency", "manifest", "the universe wants", "empath", "narcissistic abuse".
 - Nietzsche's 1882 book is ALWAYS cited as "The Joyful Wisdom" - never use its other English title.
 
+SCRIPT CRAFT (learned from the niche's top performers - these serve the locked structure, they NEVER change it: all cue lines, the recap opener and every numbered section stay exactly as specified)
+- PROMISE INVERSION: in the premise, first validate what the title promises, then reveal that the viewer's assumed way of getting it is exactly what blocks it - this opens a loop the whole video keeps paying into
+- LOOP-CHAIN THE KEYS: never close a key flat, the last clause of each key opens a darker or deeper door that the next key walks through, retention lives at the key seams
+- THE TURN: around key 5 or 6, flip the lens from 'people like this' to the viewer themselves, gently but unmistakably - it re-hooks the second half
+- DIAGNOSTIC MIRROR: cash every abstraction into a concrete this-week behavior within two sentences, 'you did this on Tuesday' energy, one physical teaching image per key matching its cue
+- NEGATION-REFRAME: 'it is not X, it is Y' roughly every minute, close each key on one such quotable aphorism
+- CLAIM THEN QUOTE: the claim comes first in plain words, then 'Jung wrote...' seals it, never open with the quote, one quote maximum per key
+- SENTENCE RHYTHM for comma-prose: alternate runs of three to five short clauses with one long rolling clause, direct address 'you' throughout, present tense for the viewer's life, past tense only for Jung's
+- THE RECAP begins with the exact words 'here is the whole picture', then restates the keys as a chain of short aphorisms in order, ending warmer than the darkest middle
+- NEVER: fabricated quotes or cases, chosen-one flattery ('most people cannot handle this, but you...'), or advice to cut people off and isolate - this audience publicly burns channels for all three
+
 STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Carl Jung observed...".
@@ -697,10 +714,11 @@ LENGTH — THIS IS A HARD REQUIREMENT
 
 OUTPUT
 - Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
+- FINAL SELF-CHECK before you finish: exactly {num} lines of the form [IMAGE: MASTER KEY N ...] numbered 1 to {num}, the recap begins with the exact words "here is the whole picture", zero periods in spoken text.
 """
 
 
-META_JUNG = 'You extract a structured mindmap + image-prompt package from a finished video script.\nReturn ONLY valid JSON. No markdown fences, no prose, no trailing commentary.\n\nThe JSON object must have exactly these fields:\n{\n  "premise": "a short multi-line block: the accurately quoted insight, then its attribution line exactly as the script gives it (e.g. \'- Carl Jung, Aion\' or \'- Nietzsche, Thus Spoke Zarathustra\'), then 2-4 short connecting lines that land emotionally (use real line breaks)",\n  "affirmation": "the exact three-part first-person present-tense assumption on its own lines, ending in \'I make the unconscious conscious\', then a blank line and 1-2 short grounding lines",\n  "affirmation_title": "a 2-4 word ALL-CAPS signature phrase for this video\'s affirmation branch (e.g. \'FACE THE SHADOW\')",\n  "cta": "the two-word comment phrase",\n  "keys": [\n    {\n      "title": "the key number + a short headline that matches the script\'s key exactly, e.g. \'1, Why one sentence is enough\'",\n      "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 full sentences that walk through the key IN ORDER, each covering its consecutive ~quarter of the key\'s text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script\'s OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter"],\n      "image_slot": "the visual CONCEPT from this key\'s [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",\n      "gemini_prompt": "a full image prompt that renders that concept, in the style below"\n    }\n  ],\n  "stepping_back": ["4-6 SHORT recap lines for the whole video, total under 500 characters. Do NOT write one full sentence per key - compress: each line is a tight clause, and one line may fold two keys together (semicolons welcome). It reads as one flowing \'here is the whole picture\' paragraph, like: \'one anchor is enough in a crisis; your supply was never money but God\'"],\n  "closing": ["ONLY the final closing lines that tie back to the title; do NOT include the affirmation or any product/channel pitch - those are added separately"],\n  "product_pitch": "(only if the video ends with a product pitch) reformat the script\'s closing pitch as: 1-2 short lead-in lines about why the product is needed, then a blank line, then a line \'★ <PRODUCT NAME IN CAPS> ★\', then 2-3 \'→ ...\' bullet lines including any price / refund / \'link in description\', with real line breaks. Empty string otherwise."\n}\n\nALIGNMENT (critical): everything must match the actual script.\n- The keys correspond ONE-TO-ONE and IN ORDER to the script\'s keys (each "the [ordinal] key is..." section). \'title\' and \'body\' summarize that exact key.\n- Take premise, affirmation, cta, stepping_back and closing from what the script actually says.\n- Base each key\'s image_slot and gemini_prompt on THAT key\'s own "[IMAGE: MASTER KEY N ...]" cue in the script — the picture must illustrate that specific idea.\n\nEach gemini_prompt renders the key\'s image cue as a cinematic teaching illustration that EXPLAINS the idea (a clear visual metaphor, a simple mechanism, a before-and-after contrast, or a labelled concept) — NEVER a random unrelated object, and NEVER flooded with text. Follow this exact style:\n\'A cinematic spiritual teaching illustration, 16:9, deep black background with a soft warm vignette, high production quality. Everything rendered in rich warm gold with a gentle glow, elegant and uncluttered. Title at top in gold serif capitals: "TITLE" (a 3 to 6 word teaching phrase capturing the key, like "THE DOOR STANDS OPEN" — not just one or two words). Central visual: <a clear visual metaphor that EXPLAINS the concept — show the transformation, contrast, or mechanism, not just a static object>. Where the idea is a contrast, render the old/negative side dim, muted and shadowed, and the true/positive side bright, warm and glowing gold, and label each side with one small gold word. Use at most 2 to 3 small gold label words inside the scene, and only where they make the idea clearer. A single gold caption line at the bottom — a fuller teaching sentence of about 6 to 12 words that states the lesson, like "at night the doubting guard sleeps - whatever you carry in takes root": "<caption>". Warm gold on black, cinematic and meaningful, lots of dark space, calm and never crowded with text.\'\n\n\'keys\' must contain EXACTLY the requested number of keys, in order.\nCRITICAL JSON RULE: inside every string value, use ONLY single quotes \' \' for any quoted words - NEVER double quotes - so the JSON stays valid and parseable.\nOutput raw JSON only.'
+META_JUNG = 'You extract a structured mindmap + image-prompt package from a finished video script.\nReturn ONLY valid JSON. No markdown fences, no prose, no trailing commentary.\n\nThe JSON object must have exactly these fields:\n{\n  "premise": "a short multi-line block: the accurately quoted insight, then its attribution line exactly as the script gives it (e.g. \'- Carl Jung, Aion\' or \'- Nietzsche, Thus Spoke Zarathustra\'), then 2-4 short connecting lines that land emotionally (use real line breaks)",\n  "affirmation": "the exact three-part first-person present-tense assumption on its own lines, ending in \'I make the unconscious conscious\', then a blank line and 1-2 short grounding lines",\n  "affirmation_title": "a 2-4 word ALL-CAPS signature phrase for this video\'s affirmation branch (e.g. \'FACE THE SHADOW\')",\n  "cta": "the two-word comment phrase",\n  "keys": [\n    {\n      "title": "the key number + a short headline that matches the script\'s key exactly, e.g. \'1, Why one sentence is enough\'",\n      "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 full sentences that walk through the key IN ORDER, each covering its consecutive ~quarter of the key\'s text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script\'s OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter"],\n      "image_slot": "the visual CONCEPT from this key\'s [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",\n      "decree": "the key\'s short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if none)",\n      "gemini_prompt": "a full image prompt that renders that concept, in the style below"\n    }\n  ],\n  "stepping_back": ["4-6 SHORT recap lines for the whole video, total under 500 characters. Do NOT write one full sentence per key - compress: each line is a tight clause, and one line may fold two keys together (semicolons welcome). It reads as one flowing \'here is the whole picture\' paragraph, like: \'one anchor is enough in a crisis; your supply was never money but God\'"],\n  "closing": ["ONLY the final closing lines that tie back to the title; do NOT include the affirmation or any product/channel pitch - those are added separately"],\n  "product_pitch": "(only if the video ends with a product pitch) reformat the script\'s closing pitch as: 1-2 short lead-in lines about why the product is needed, then a blank line, then a line \'★ <PRODUCT NAME IN CAPS> ★\', then 2-3 \'→ ...\' bullet lines including any price / refund / \'link in description\', with real line breaks. Empty string otherwise."\n}\n\nALIGNMENT (critical): everything must match the actual script.\n- The keys correspond ONE-TO-ONE and IN ORDER to the script\'s keys (each "the [ordinal] key is..." section). \'title\' and \'body\' summarize that exact key.\n- Take premise, affirmation, cta, stepping_back and closing from what the script actually says.\n- Base each key\'s image_slot and gemini_prompt on THAT key\'s own "[IMAGE: MASTER KEY N ...]" cue in the script — the picture must illustrate that specific idea.\n\nEach gemini_prompt renders the key\'s image cue as a cinematic teaching illustration that EXPLAINS the idea (a clear visual metaphor, a simple mechanism, a before-and-after contrast, or a labelled concept) — NEVER a random unrelated object, and NEVER flooded with text. Follow this exact style:\n\'A cinematic spiritual teaching illustration, 16:9, deep black background with a soft warm vignette, high production quality. Everything rendered in rich warm gold with a gentle glow, elegant and uncluttered. Title at top in gold serif capitals: "TITLE" (a 3 to 6 word teaching phrase capturing the key, like "THE DOOR STANDS OPEN" — not just one or two words). Central visual: <a clear visual metaphor that EXPLAINS the concept — show the transformation, contrast, or mechanism, not just a static object>. Where the idea is a contrast, render the old/negative side dim, muted and shadowed, and the true/positive side bright, warm and glowing gold, and label each side with one small gold word. Use at most 2 to 3 small gold label words inside the scene, and only where they make the idea clearer. A single gold caption line at the bottom — a fuller teaching sentence of about 6 to 12 words that states the lesson, like "at night the doubting guard sleeps - whatever you carry in takes root": "<caption>". Warm gold on black, cinematic and meaningful, lots of dark space, calm and never crowded with text.\'\n\n\'keys\' must contain EXACTLY the requested number of keys, in order.\nCRITICAL JSON RULE: inside every string value, use ONLY single quotes \' \' for any quoted words - NEVER double quotes - so the JSON stays valid and parseable.\nOutput raw JSON only.'
 
 
 
@@ -815,6 +833,7 @@ The JSON object must have exactly these fields:
       "title": "the key number + a short headline that matches the script's key exactly, e.g. '1, Why one sentence is enough'",
       "body": ["sentence 1 - sums up the FIRST quarter of this key", "sentence 2 - sums up the SECOND quarter", "sentence 3 - sums up the THIRD quarter", "sentence 4 - sums up the LAST quarter. EXACTLY 4 sentences, never more, that walk through the key IN ORDER, each covering its consecutive ~quarter of the key's text so together they trace the whole key start to finish; each sentence SHORT - roughly 8-14 words, the whole body STRICTLY under 240 characters total (count them - this is the hard limit that matches the locked mindmap style) - using the script's OWN words closely (near-verbatim key phrases), not vague summaries. Compress hard: one tight clause per quarter, like 'In a crisis, a panicked mind can't manage complex rituals'"],
       "image_slot": "the visual CONCEPT from this key's [IMAGE: MASTER KEY N ...] cue in the script (what the picture should show/explain)",
+      "decree": "the key's short first-person closing decree exactly as the script speaks it, no surrounding quotes (empty string if the script has none)",
       "gemini_prompt": "a full image prompt that renders that concept, in the style below"
     }
   ],
@@ -884,3 +903,101 @@ AUTHORS = {
         product_pitch_fallback='Knowing these ideas is one thing - living them daily is another,\nthe old habits have deep roots and return when life gets loud.\n\n★ {PRODUCT} ★\n→ a simple daily sequence to make this teaching your normal state\n→ link in description.'),
 
 }
+
+# ---------------------------------------------------------------------------
+# SLEEP / MEDITATION mode - continuous hypnotic journey (locked to the user's
+# exemplar script: flowing movements, embedded declarations, open-loop
+# transitions, normal punctuation, no keys, no teaching lists)
+# ---------------------------------------------------------------------------
+SLEEP_FLAVORS = {
+    "shinn": "Florence Scovel Shinn's world: the spoken word as wand, divine supply, decrees under grace, God as unfailing supply. Weave her real decrees ('I cast this burden on the Christ within and I go free', 'God is my unfailing supply', 'I am an irresistible magnet for all that belongs to me by divine right') honestly attributed.",
+    "neville": "Neville Goddard's world: imagination as God, the state akin to sleep, living in the end, I AM, revision. The night is when assumptions harden into fact. Declarations in the wish-fulfilled present tense.",
+    "murphy": "Joseph Murphy's world: the subconscious as fertile soil that accepts whatever is impressed at the drowsy threshold, scientific prayer, the two minds. Declarations impress the subconscious gently.",
+    "hay": "Louise Hay's warm world: self-love, safety, deservability, 'all is well'. Motherly, dear-one gentleness. NO money pressure unless the title asks; healing means peace and self-relationship, never medical claims.",
+    "hill": "Napoleon Hill's world made gentle for the night: autosuggestion before sleep, the burning desire restated calmly, the subconscious accepting the written and spoken aim. No lecture-hall energy - embers, not fire.",
+    "fox": "Emmet Fox's world: the Golden Key (think of God instead of the difficulty), the practice of the presence of God, divine love dissolving every burden. Christian-safe vocabulary throughout.",
+    "jung": "Carl Jung's register - IMPORTANT: no manifestation promises, no wealth commands. A calm night journey of integration: making peace with the day, meeting the inner life with acceptance, the psyche resting into wholeness. Declarations are quiet resolutions, not decrees.",
+    "custom": None,
+    "auto": None,
+}
+
+
+def build_sleep_system(p):
+    author = AUTHORS[p["author"]]
+    flavor = SLEEP_FLAVORS.get(p["author"])
+    if not flavor:
+        focus = (p.get("custom_focus") or
+                 "the theme the TITLE itself states - infer the fitting spiritual register from the title alone")
+        flavor = f"THIS VIDEO'S FOCUS: {focus}. Stay pure to that focus, honest attribution only, never invent quotes."
+    n_scenes = p.get("n_scenes", 12)
+    mid = max(3, n_scenes // 2)
+
+    if p.get("cta_none"):
+        comment_rule = "Do NOT ask for comments anywhere."
+        early_cta = "a single gentle like ask only (no comment request)"
+        end_comment = "no comment ask"
+    else:
+        phrase = (p.get("cta") or "").strip()
+        if phrase:
+            comment_rule = f"The end comment ask uses EXACTLY this phrase: '{phrase}'."
+        else:
+            comment_rule = ("Invent ONE short first-person identity phrase for the end comment ask "
+                            "(like 'I am the living formula') that fits tonight's journey.")
+        early_cta = ("one gentle like ask plus 'let me know where in the world you're watching from tonight'")
+        end_comment = "the comment-phrase ask"
+
+    return f"""You are the ghostwriter for a faceless YouTube channel's SLEEP / MEDITATION long-form video. {flavor}
+
+THIS IS NOT A TEACHING VIDEO. It is a continuous hypnotic night journey the listener can fall asleep inside. You never explain how to do techniques, never list reasons, never number anything out loud.
+
+VOICE AND RULES
+- Speak to 'you' in warm, unhurried, intimate second person, present tense. All embedded declarations are first person ('I...').
+- Normal punctuation is allowed (periods are fine). NO lists, NO 'the first key is', NO numbered anything in the spoken text.
+- Long rolling sentences that breathe, alternated with short grounding ones. Constant gentle reframes: 'This isn't X. This is Y.'
+- Recurring engines to rotate: 'Behind the scenes...', 'The hidden truth about...', 'The impact of this...', 'What's particularly powerful...', 'This is where the journey turns...'
+- The master polarity woven throughout: never through force, striving or hustle - always through alignment, grace, release, being carried.
+- NOTHING jarring: no urgency, no fear, no shame, no deadlines, no medical or income promises. Quotes only if real and honestly attributed; otherwise paraphrase ('she taught that...').
+
+STRUCTURE
+1. THE HOOK (first 1-2 minutes): open with a 'What if I told you...' style question that reframes tonight's sleep as sacred. Frame tonight as an appointment. Within the first minute: {early_cta}. Plant one 'stay with me until the end, because...' promise.
+2. Then EXACTLY {n_scenes} MOVEMENTS. Immediately BEFORE each movement insert a cue line EXACTLY in this form:
+[SCENE N - dreamlike gold visual: <one soft, wordless visual for this movement>]
+   Each movement: one revelation or inner experience, deepened experientially (never instructionally), containing ONE embedded first-person declaration under 15 words (in single quotes, spoken once, then repeated once slowly), and CLOSING with an open-loop handoff ('Now, I want to explore... because...').
+3. Around movement {mid}: ONE soft like ask, woven in ('if this is resonating, a simple like tells me this found the right person').
+4. The FINAL movement is identity fusion: the journey's master declaration, the one phrase the whole night installs.
+5. THE ENDING: a qualification line ('if you've stayed with me until this moment...'), a calm subscribe invitation, {end_comment}, one last gentle like mention, and a soft pointer to a next video. {comment_rule}
+- Insert [long_pause] markers between movements and around each declaration.
+
+LENGTH - HARD REQUIREMENT
+- The spoken text MUST reach the target character count (about 850 characters per minute). Aim to LAND ON the target - within about five percent, never far under, no more than about ten percent over. Movements roughly equal in length.
+
+OUTPUT
+- Output ONLY the script with those inline markers. No preamble, no headers, no commentary.
+
+FINAL SELF-CHECK: exactly {n_scenes} [SCENE N ...] cue lines numbered 1 to {n_scenes}, no numbered sections in the spoken text, every movement ends on an open loop, every declaration appears twice."""
+
+
+META_SLEEP = """You extract a structured mindmap + image-prompt package from a finished SLEEP/MEDITATION video script.
+Return ONLY valid JSON. No markdown fences, no prose.
+
+The JSON object must have exactly these fields:
+{
+  "hook": "the opening hook compressed to 2-4 short lines (use real line breaks)",
+  "movements": [
+    {
+      "title": "2-5 word name for this movement",
+      "essence": "1-2 short lines capturing what this movement does to the listener",
+      "declaration": "the movement's first-person declaration exactly as spoken, no surrounding quotes (empty string if none)",
+      "image_slot": "the visual CONCEPT from this movement's [SCENE N ...] cue",
+      "gemini_prompt": "a full image prompt rendering that concept in the style below"
+    }
+  ],
+  "closing": "the ending sequence compressed to 2-4 short lines",
+  "comment_phrase": "the comment phrase the video asks for (empty string if none)"
+}
+
+The movements correspond ONE-TO-ONE and IN ORDER to the script's [SCENE N ...] sections.
+Each gemini_prompt follows this exact style:
+'A dreamlike spiritual night illustration, 16:9, deep midnight blue-black background, soft luminous warm gold light, ethereal and calm, high production quality. Central visual: <the movement's concept as a gentle glowing dream image>. NO text anywhere in the image, no words, no letters - pure imagery only. Misty, weightless, sacred, restful.'
+CRITICAL JSON RULE: inside every string value use ONLY single quotes for quoted words, NEVER double quotes.
+Output raw JSON only."""

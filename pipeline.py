@@ -161,6 +161,19 @@ def build_script_system(p):
     """Dispatch to the selected author's locked script format."""
     s = AUTHORS[p["author"]]["build_system"](p)
     n = p["num_keys"]
+    s += ("\n\nDECREES: every key CLOSES with one short first-person decree in the "
+          "author's own register (a spoken decree for the manifestation authors, a "
+          "quiet resolution line for Carl Jung) - introduce it naturally ('so speak "
+          "this decree with me...' or the author's equivalent), speak it once and "
+          "repeat it once, keep it under 15 words, and make it DISTINCT for every key.")
+    unit = p.get("unit_word") or "keys"
+    if unit != "keys":
+        u1 = unit.rstrip("s")
+        s += (f"\n\nUNIT NAME: in this video the numbered sections are called "
+              f"'{unit}', not 'keys' - every spoken 'the first key is' becomes "
+              f"'the first {u1} is' and so on, and the recap language matches. The "
+              f"[IMAGE: MASTER KEY N ...] cue lines stay EXACTLY as specified (they "
+              f"are never spoken).")
     s += (f"\n\nFINAL SELF-CHECK before you finish - all three must hold or the "
           f"script is rejected:\n"
           f"1. EXACTLY {n} keys, each opening with its ordinal ('the first key is...' "
@@ -639,7 +652,7 @@ def build_xmind(path, title, num_keys, ending, meta, images,
                 signature="- Unknown Author",
                 product_fallback="★ {PRODUCT} ★\n→ link in description.",
                 anchor="my word is my wand",
-                premise_on=True, affirmation_on=True):
+                premise_on=True, affirmation_on=True, unit_word="Keys"):
     """Write a valid .xmind zip in the LOCKED reference style.
 
     images: dict {index -> png_bytes} for keys that got an image.
@@ -647,6 +660,7 @@ def build_xmind(path, title, num_keys, ending, meta, images,
     """
     import hashlib
     num_word = "NINE" if num_keys == 9 else "SIX"
+    unit_title = (unit_word or "Keys").capitalize()
     meta = meta or {}
 
     # ---- meta pieces ----
@@ -673,6 +687,9 @@ def build_xmind(path, title, num_keys, ending, meta, images,
         k = keys[i] if i < len(keys) else {}
         ktitle = k.get("title", f"{i+1}, Key {i+1}")
         body_text = _lines(k.get("body", []))
+        _decree = str(k.get("decree", "") or "").strip().strip("'\"")
+        if _decree:
+            body_text += f"\n\n'{_decree}'"
         if i in sha_by_index:
             child = _topic(body_text, image=_img(sha_by_index[i]),
                           custom_width=490, folded=True)
@@ -690,7 +707,7 @@ def build_xmind(path, title, num_keys, ending, meta, images,
         key_nodes.append(_topic("The Daily Covenant",
                                 children=[_topic(cov, custom_width=490)]))
 
-    keys_group = _topic(f"The {num_word} Keys:", children=key_nodes)
+    keys_group = _topic(f"The {num_word} {unit_title}:", children=key_nodes)
 
     # ---- funnel: TWO second-channel nodes, matching the reference ----
     # (a) an early top-level mention before the title branch, and
@@ -923,9 +940,294 @@ def extract_image_prompts_from_script(script):
 # --------------------------------------------------------------------------
 # The end-to-end runner (called in a background thread by server.py)
 # --------------------------------------------------------------------------
+SCENE_CUE_RE = re.compile(r"\[SCENE\s+(\d+)", re.I)
+
+SLEEP_IMAGE_STYLE = (
+    "A dreamlike spiritual night illustration, 16:9, deep midnight blue-black "
+    "background, soft luminous warm gold light, ethereal and calm, high production "
+    "quality. Central visual: {concept}, rendered as a gentle glowing dream image. "
+    "NO text anywhere in the image, no words, no letters - pure imagery only. "
+    "Misty, weightless, sacred, restful.")
+
+
+def build_xmind_sleep(path, title, meta, images, signature=""):
+    """Sleep-mode mindmap: central title -> Tonight (hook) -> CAPS title branch
+    holding the numbered movements (essence + declaration + image) -> Closing."""
+    import hashlib
+    meta = meta or {}
+    hook = _lines(meta.get("hook"), "[hook unavailable]")
+    closing = _lines(meta.get("closing"), "closing")
+    phrase = str(meta.get("comment_phrase", "") or "").strip().strip("'\"")
+    movements = meta.get("movements", []) or []
+
+    resources = {}
+    sha_by_index = {}
+    for i, png in images.items():
+        sha = hashlib.sha256(png).hexdigest()
+        resources[f"resources/{sha}.png"] = png
+        sha_by_index[i] = sha
+
+    move_nodes = []
+    for i, m in enumerate(movements):
+        mtitle = f"{i+1}, {str(m.get('title') or f'Movement {i+1}').strip()}"
+        body = _lines(m.get("essence"), "")
+        decl = str(m.get("declaration", "") or "").strip().strip("'\"")
+        if decl:
+            body = (body + "\n\n" if body else "") + f"'{decl}'"
+        if i in sha_by_index:
+            child = _topic(body or "...", image=_img(sha_by_index[i]),
+                           custom_width=490, folded=True)
+        else:
+            child = _topic(body or "...", custom_width=490, folded=True)
+        move_nodes.append(_topic(mtitle, children=[child]))
+
+    closing_text = closing
+    if phrase:
+        closing_text += f"\n\nComment: '{phrase}'"
+    title_branch = _topic(_caps_hook(title), children=[
+        _topic(f"The Journey ({len(move_nodes)} movements):", children=move_nodes),
+        _topic("Closing", children=[_topic(closing_text, custom_width=490, folded=True)]),
+    ])
+    branches = [
+        _topic("Tonight", children=[_topic(hook, custom_width=490, folded=True)]),
+        title_branch,
+    ]
+
+    root = {
+        "id": nid(), "class": "topic", "title": (title + "\n" + signature).strip(),
+        "structureClass": "org.xmind.ui.logic.right",
+        "children": {"attached": branches},
+    }
+    sheet = {
+        "id": nid(), "class": "sheet", "title": "Map 1",
+        "rootTopic": root, "theme": XMIND_THEME,
+        "topicOverlapping": "overlap", "zones": [],
+    }
+    metadata = {
+        "dataStructureVersion": "3",
+        "creator": {"name": "Shinn Video Maker", "version": "1.0"},
+        "layoutEngineVersion": "5",
+    }
+    thumb = next(iter(images.values()), _BLACK_PNG)
+    file_entries = {"content.json": {}, "metadata.json": {},
+                    "Thumbnails/thumbnail.png": {}}
+    for zip_res in resources:
+        file_entries[zip_res] = {}
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("content.json", json.dumps([sheet], ensure_ascii=False))
+        z.writestr("metadata.json", json.dumps(metadata, ensure_ascii=False))
+        z.writestr("manifest.json", json.dumps({"file-entries": file_entries}, ensure_ascii=False))
+        z.writestr("Thumbnails/thumbnail.png", thumb)
+        for zip_res, b in resources.items():
+            z.writestr(zip_res, b)
+
+
+def run_pipeline_sleep(job_id, p, job, output_root):
+    """Sleep/Meditation mode: hypnotic journey script + movement mindmap."""
+    from authors import build_sleep_system, META_SLEEP
+    try:
+        job["warnings"] = []
+        cfg = load_env()
+        if p.get("custom_api_key"):
+            cfg["ANTHROPIC_API_KEY"] = p["custom_api_key"]
+        author = AUTHORS[p.get("author") or "shinn"]
+        p["author"] = p.get("author") or "shinn"
+        p["author_display"] = author["display"]
+        signature = author["signature"]
+        if p["author"] == "custom":
+            focus = (p.get("custom_focus") or "Spiritual Teaching").strip()
+            p["author_display"] = focus.title()
+            signature = "- " + focus.title()
+        elif p["author"] == "auto":
+            p["author_display"] = "Auto (from title)"
+            signature = ""
+        hist_key = "sleep_" + (p.get("custom_focus") and
+                               ("custom_" + slugify(p["custom_focus"], 24)) or p["author"])
+        model = p.get("model_override") or cfg.get("MODEL", "claude-sonnet-5")
+        do_images = p.get("do_images", True)
+        title = p["title"]
+        slug = slugify(title)
+        target = p["target_chars"]
+        p["n_scenes"] = max(8, min(20, target // 2800))
+
+        out_dir = os.path.join(output_root, job_id)
+        os.makedirs(out_dir, exist_ok=True)
+        try:
+            with open(os.path.join(out_dir, "_title.txt"), "w", encoding="utf-8") as fh:
+                fh.write(title + "\n" + p["author_display"] + " (sleep)")
+        except Exception:
+            pass
+
+        # ---------- 1. script ----------
+        job.update(stage=f"Writing the sleep journey ({p['author_display']})...", progress=8)
+        system = build_sleep_system(p)
+        user_msg = (f"TITLE: {title}\n"
+                    f"Target length: about {target} characters (~{round(target/850)} minutes "
+                    f"of unique spoken content).\n"
+                    f"Number of movements: exactly {p['n_scenes']}.\n")
+        if p.get("extra"):
+            user_msg += f"Extra instructions: {p['extra']}.\n"
+        vc = variety_context(hist_key)
+        if vc:
+            user_msg += vc + "\n"
+        user_msg += "\nWrite the full sleep journey script now, following the locked format exactly."
+        max_tokens = min(int(target / 2.6), 32000)
+        script = call_anthropic(cfg, model, system, user_msg, max_tokens)
+
+        # scene-count guard (one repair attempt)
+        cues = len(SCENE_CUE_RE.findall(script))
+        if abs(cues - p["n_scenes"]) > 1:
+            job.update(stage=f"Repairing scenes ({cues}/{p['n_scenes']})...", progress=14)
+            try:
+                fixed = call_anthropic(
+                    cfg, model, system,
+                    (f"This script has {cues} [SCENE N ...] cue lines but must have exactly "
+                     f"{p['n_scenes']}, numbered 1 to {p['n_scenes']} in order, one before each "
+                     f"movement. Merge or split movements at natural points to fix this, keep "
+                     f"everything else identical, and return ONLY the corrected script.\n\n"
+                     f"SCRIPT:\n{script}"),
+                    min(int(len(script) / 2.6) + 3000, 32000))
+                if abs(len(SCENE_CUE_RE.findall(fixed)) - p["n_scenes"]) <= 1 \
+                        and spoken_len(fixed) > 0.8 * spoken_len(script):
+                    script = fixed
+            except Exception as e:
+                job["warnings"].append(f"Scene repair failed: {e}")
+        stats = compute_stats(script)
+
+        # length: expand up to 2 passes, then one condense if far over
+        tries = 0
+        while stats["spoken_chars"] < 0.92 * target and tries < 2:
+            tries += 1
+            job.update(stage=f"Journey is {stats['spoken_chars']}/{target} chars, "
+                             f"deepening (pass {tries})...", progress=14 + tries * 6)
+            try:
+                longer = call_anthropic(
+                    cfg, model, system,
+                    (f"This journey is only {stats['spoken_chars']} characters of spoken text "
+                     f"but must reach about {target}. Rewrite it LONGER by deepening every "
+                     f"movement experientially - slower, richer imagery, more space - never "
+                     f"by adding teaching. Keep the same [SCENE N ...] cues, the same "
+                     f"declarations, the same order and endings. Return ONLY the complete "
+                     f"expanded script.\n\nCURRENT DRAFT:\n{script}"),
+                    max_tokens)
+            except Exception as e:
+                job["warnings"].append(f"Deepen pass {tries} failed: {e}")
+                break
+            ns = compute_stats(longer)
+            if ns["spoken_chars"] > stats["spoken_chars"] + 300 \
+                    and abs(len(SCENE_CUE_RE.findall(longer)) - p["n_scenes"]) <= 1:
+                script, stats = longer, ns
+            else:
+                break
+        if stats["spoken_chars"] > 1.15 * target:
+            job.update(stage="Journey over target - condensing...", progress=28)
+            try:
+                shorter = call_anthropic(
+                    cfg, model, system,
+                    (f"This journey is {stats['spoken_chars']} characters but must be about "
+                     f"{target} (within five percent). Condense it by removing repetition, "
+                     f"never removing whole movements or declarations. Keep all [SCENE N ...] "
+                     f"cues. Return ONLY the condensed script.\n\nSCRIPT:\n{script}"),
+                    max_tokens)
+                cs = compute_stats(shorter)
+                if 0.85 * target <= cs["spoken_chars"] < stats["spoken_chars"]:
+                    script, stats = shorter, cs
+            except Exception as e:
+                job["warnings"].append(f"Condense failed: {e}")
+
+        script_path = os.path.join(out_dir, f"{slug}_RECORDING.txt")
+        with open(script_path, "w", encoding="utf-8") as fh:
+            fh.write(script)
+
+        # ---------- 2. meta ----------
+        job.update(stage="Extracting movements + image prompts...", progress=35)
+        meta = None
+        meta_raw = None
+        for attempt in range(3):
+            try:
+                meta_raw = call_anthropic(
+                    cfg, model, META_SLEEP,
+                    (f"The script has {p['n_scenes']} [SCENE N ...] movements.\n\n"
+                     f"Here is the finished script:\n\n{script}\n\n"
+                     f"Return the JSON package now."),
+                    16000, strict=True)
+                cand = parse_json_loose(meta_raw)
+                if len(cand.get("movements") or []) < max(6, p["n_scenes"] - 2):
+                    raise ValueError("too few movements in meta")
+                meta = cand
+                break
+            except Exception:
+                continue
+        if meta is None and meta_raw:
+            try:
+                fixed = call_anthropic(
+                    cfg, model,
+                    "You repair broken JSON. Escape inner double quotes, remove trailing "
+                    "commas, return ONLY the corrected JSON object.",
+                    meta_raw, 16000)
+                meta = parse_json_loose(fixed)
+                job["warnings"].append("Sleep meta needed a repair pass.")
+            except Exception as e:
+                job["warnings"].append(f"Sleep meta failed: {e}")
+
+        # ---------- 3. images ----------
+        images = {}
+        movements = (meta or {}).get("movements", []) or []
+        if do_images and movements:
+            def _one_image(idx, pr):
+                png = generate_image(pr, cfg)
+                with open(os.path.join(out_dir, f"{slug}_scene{idx+1}.png"), "wb") as fh:
+                    fh.write(png)
+                return png
+            futures = {}
+            with ThreadPoolExecutor(max_workers=5) as ex:
+                for i, m in enumerate(movements):
+                    pr = (m.get("gemini_prompt") or "").strip() or \
+                         SLEEP_IMAGE_STYLE.format(concept=(m.get("image_slot") or m.get("title") or "a calm night sky"))
+                    futures[ex.submit(_one_image, i, pr)] = i
+                job.update(stage=f"Generating {len(futures)} scene images (in parallel)...", progress=45)
+                done = 0
+                for fut in as_completed(futures):
+                    i = futures[fut]
+                    try:
+                        images[i] = fut.result()
+                    except Exception as e:
+                        job["warnings"].append(f"Scene {i+1} image failed: {e}")
+                    done += 1
+                    job.update(stage=f"Scene images ({done}/{len(futures)})...",
+                               progress=45 + int(35 * done / max(len(futures), 1)))
+        elif not do_images:
+            job["warnings"].append("Image generation skipped (checkbox off).")
+
+        # ---------- 4. xmind + finish ----------
+        job.update(stage="Building the sleep mindmap...", progress=88)
+        xmind_path = os.path.join(out_dir, f"{slug}_MindMap.xmind")
+        build_xmind_sleep(xmind_path, title, meta, images, signature=signature)
+
+        if meta:
+            remember_run(hist_key, title, {
+                "premise": str(meta.get("hook", ""))[:160],
+                "affirmation": str(meta.get("comment_phrase", ""))[:100],
+                "keys": [{"title": str(m.get("title", ""))[:90]} for m in movements],
+            })
+        job.update(stage="Archiving to permanent storage...", progress=97)
+        archive_job(cfg, job_id, title, p["author_display"] + " (sleep)",
+                    [script_path, xmind_path], job["warnings"].append)
+        job["result"] = {
+            "files": [os.path.basename(script_path), os.path.basename(xmind_path)],
+            "stats": stats, "slug": slug,
+        }
+        job.update(stage="Done", progress=100, status="done")
+    except Exception as e:
+        job["warnings"] = job.get("warnings", [])
+        job.update(stage=f"Error: {e}", progress=100, status="error", error=str(e))
+
+
 def run_pipeline(job_id, p, job, output_root):
     """Mutates `job` in place: job['stage'], job['progress'], job['status'],
     job['warnings'], job['result']."""
+    if p.get("video_type") == "sleep":
+        return run_pipeline_sleep(job_id, p, job, output_root)
     try:
         job["warnings"] = []
         cfg = load_env()
@@ -1334,6 +1636,7 @@ def run_pipeline(job_id, p, job, output_root):
                     product_name=p["product_name"], funnel_channel=p["funnel_channel"],
                     signature=signature,
                     premise_on=p.get("premise_mode", "auto") != "none",
+                    unit_word=p.get("unit_word", "keys"),
                     affirmation_on=p.get("affirmation_mode", "adjusted") != "none",
                     product_fallback=author["product_pitch_fallback"],
                     anchor=author.get("anchor", ""))
