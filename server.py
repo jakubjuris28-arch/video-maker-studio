@@ -152,10 +152,7 @@ PAGE = """<!doctype html>
     <textarea name="extra" placeholder=""></textarea>
 
     <label>Anthropic API key <span class="hint">(whose balance pays for the script)</span></label>
-    <select name="api_key_choice" id="api_key_choice">
-      <option value="kubko">kubko (built-in)</option>
-      <option value="custom">my own key (paste below)</option>
-    </select>
+    <select name="api_key_choice" id="api_key_choice">__KEY_OPTIONS__</select>
     <input type="text" name="custom_api_key" id="custom_api_key" placeholder="sk-ant-..."
            style="display:none; margin-top:8px" autocomplete="off">
 
@@ -384,7 +381,15 @@ def _password_gate():
 # --------------------------------------------------------------------------
 @app.route("/")
 def index():
-    return PAGE.replace("__AUTHOR_OPTIONS__", _OPTS).replace("__AUTHOR_META__", _META)
+    cfg = pipeline.load_env()
+    named = sorted(k[len("ANTHROPIC_API_KEY_"):].lower()
+                   for k in cfg if k.startswith("ANTHROPIC_API_KEY_") and cfg[k])
+    key_opts = '<option value="kubko">kubko (built-in)</option>'
+    key_opts += "".join(f'<option value="named:{n}">{n} (built-in)</option>' for n in named)
+    key_opts += '<option value="custom">my own key (paste below)</option>'
+    return (PAGE.replace("__AUTHOR_OPTIONS__", _OPTS)
+                .replace("__AUTHOR_META__", _META)
+                .replace("__KEY_OPTIONS__", key_opts))
 
 
 @app.route("/generate", methods=["POST"])
@@ -434,12 +439,19 @@ def generate():
     if author_key == "custom" and not params["custom_focus"]:
         return jsonify({"error": "Type the custom topic or author (e.g. 'spirituality "
                                   "in general') - nothing was generated."}), 400
-    if (d.get("api_key_choice") or "kubko") == "custom":
+    key_choice = d.get("api_key_choice") or "kubko"
+    if key_choice == "custom":
         ck = (d.get("custom_api_key") or "").strip()
         if not ck.startswith("sk-ant-") or len(ck) < 30:
             return jsonify({"error": "That doesn't look like an Anthropic API key "
                                       "(it starts with sk-ant-...). Nothing was generated."}), 400
         params["custom_api_key"] = ck
+    elif key_choice.startswith("named:"):
+        nk = pipeline.load_env().get("ANTHROPIC_API_KEY_" + key_choice[6:].upper())
+        if not nk:
+            return jsonify({"error": f"Key '{key_choice[6:]}' is not configured on this "
+                                      "server. Nothing was generated."}), 400
+        params["custom_api_key"] = nk
 
     _cleanup_output()
     job_id = uuid.uuid4().hex[:12]

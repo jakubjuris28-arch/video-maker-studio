@@ -52,7 +52,8 @@ def load_env(path=None):
         if k in ("MODEL", "ANTHROPIC_API_KEY", "KEYAI_API_KEY", "KEYAI_ENDPOINT",
                  "KEYAI_MODEL", "KEYAI_SIZE", "KEYAI_ASPECT", "KEYAI_OUTPUT_FORMAT",
                  "GITHUB_TOKEN", "STORAGE_REPO") \
-                or k.startswith("PRODUCT_NAME") or k.startswith("FUNNEL_CHANNEL"):
+                or k.startswith("PRODUCT_NAME") or k.startswith("FUNNEL_CHANNEL") \
+                or k.startswith("ANTHROPIC_API_KEY_"):
             cfg[k] = v
     return cfg
 
