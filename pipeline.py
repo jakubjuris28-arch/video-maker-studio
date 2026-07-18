@@ -1567,8 +1567,7 @@ def run_pipeline(job_id, p, job, output_root):
                 try:
                     meta = compress_meta(cfg, model, meta)
                     _check_meta_lengths(meta)
-                    job["warnings"].append(
-                        "Mindmap text was over the locked length budget; compressed automatically.")
+                    # routine self-correction - not worth a user-facing warning
                 except Exception as e2:
                     job["warnings"].append(
                         f"Length compression incomplete ({e2}); using best available text.")
