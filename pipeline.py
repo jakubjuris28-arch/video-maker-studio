@@ -159,6 +159,10 @@ def call_anthropic(cfg, model, system, user_content, max_tokens, strict=False):
 def build_script_system(p):
     """Dispatch to the selected author's locked script format."""
     s = AUTHORS[p["author"]]["build_system"](p)
+    if p.get("cta_none"):
+        s = re.sub(r"(?m)^5\. A SHORT comment call to action.*$",
+                   "5. No comment call to action in this video - never ask viewers "
+                   "to comment, type words, or engage.", s)
     if p.get("affirmation_mode") == "none" and p["author"] not in ("custom", "auto"):
         # remove the affirmation from a locked format (custom handles it natively)
         s = re.sub(r"(?m)^4\. PARTICIPATION (AFFIRMATION|RESOLUTION).*$",
@@ -1100,6 +1104,8 @@ def run_pipeline(job_id, p, job, output_root):
                     job["warnings"].append(
                         f"Length compression incomplete ({e2}); using best available text.")
 
+        if p.get("cta_none") and meta:
+            meta["cta"] = ""
         remember_run(p.get("history_key") or p["author"], title, meta)
 
         # figure out the prompts we'll feed to KeyAI

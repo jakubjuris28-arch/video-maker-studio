@@ -116,8 +116,10 @@ PAGE = """<!doctype html>
       </div>
     </div>
 
-    <label>Comment CTA <span class="hint">(two words; blank = author's default)</span></label>
-    <input type="text" name="cta" id="cta" placeholder="">
+    <label>Comment CTA <span class="hint">(the two words viewers type in the comments)</span></label>
+    <select name="cta_choice" id="cta_choice"></select>
+    <input type="text" name="cta" id="cta" placeholder="two words"
+           style="display:none; margin-top:8px" autocomplete="off">
 
     <label>Premise <span class="hint" id="premise_hint">(choose - no writing needed)</span></label>
     <select name="premise_choice" id="premise_choice"></select>
@@ -199,6 +201,13 @@ function syncAuthor(){
     ['own',  'my own premise (write below)'],
   ];
   premiseSel.innerHTML = opts.map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
+  const ctaSel = document.getElementById('cta_choice');
+  ctaSel.innerHTML = [
+    ['default', `author's default ("${a.cta}")`],
+    ['own',     'my own two words (write below)'],
+    ['none',    'no comment CTA'],
+  ].map(o => '<option value="'+o[0]+'">'+o[1]+'</option>').join('');
+  document.getElementById('cta').style.display = 'none';
   const affSel = document.getElementById('affirmation_choice');
   let affOpts = isCustom ? [
     ['adjusted', 'yes - adjusted to the theme'],
@@ -212,6 +221,9 @@ function syncAuthor(){
   syncPremiseInput();
 }
 premiseSel.addEventListener('change', syncPremiseInput);
+document.getElementById('cta_choice').addEventListener('change', function(){
+  document.getElementById('cta').style.display = this.value === 'own' ? 'block' : 'none';
+});
 authorSel.addEventListener('change', syncAuthor); syncAuthor();
 const keyChoice = document.getElementById('api_key_choice');
 const customKey = document.getElementById('custom_api_key');
@@ -341,7 +353,10 @@ def generate():
         "target_chars": _int(d.get("target_chars"), 40000),
         "num_keys": 9 if str(d.get("num_keys", "9")) == "9" else 6,
         "ending": d.get("ending", "product"),
-        "cta": (d.get("cta") or pipeline.AUTHORS[author_key]["cta_default"]).strip(),
+        "cta": ((d.get("cta") or "").strip() or pipeline.AUTHORS[author_key]["cta_default"])
+                if (d.get("cta_choice") or "default") == "own"
+                else pipeline.AUTHORS[author_key]["cta_default"],
+        "cta_none": (d.get("cta_choice") or "default") == "none",
         "scripture": (d.get("scripture") or "").strip()
                      if (d.get("premise_choice") or "auto") == "own" else "",
         "core": (d.get("core") or "").strip(),
