@@ -621,8 +621,10 @@ def download(job_id, filename):
     if "/" in filename or ".." in filename:
         abort(400)
     folder = os.path.join(OUTPUT_ROOT, job_id)
-    if not os.path.isdir(folder):
-        abort(404)
+    if not os.path.isdir(folder) or not os.path.isfile(os.path.join(folder, filename)):
+        # local copy gone (server restarted / disk wiped) - fall back to the
+        # permanent archive so old download links keep working
+        return download_remote(job_id, filename)
     return send_from_directory(folder, filename, as_attachment=True)
 
 
