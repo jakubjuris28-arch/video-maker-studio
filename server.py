@@ -7,6 +7,7 @@ Run:  python3 server.py   then open  http://127.0.0.1:5060
 """
 
 import os
+import time
 import uuid
 import threading
 
@@ -602,10 +603,30 @@ On the free cloud server the storage is also cleared whenever the server restart
 {body}</div></body></html>"""
 
 
+# short-lived cache + stable fingerprints so download managers can resume
+# archive downloads instead of restarting them forever
+_remote_cache = {}
+
+
+def _serve_bytes(data, filename):
+    import hashlib
+    from io import BytesIO
+    from flask import send_file, request as _req
+    rv = send_file(BytesIO(data), as_attachment=True, download_name=filename,
+                   mimetype="application/octet-stream", conditional=False)
+    rv.set_etag(hashlib.md5(data).hexdigest())   # stable across requests
+    rv.headers["Accept-Ranges"] = "bytes"
+    return rv.make_conditional(_req, accept_ranges=True, complete_length=len(data))
+
+
 @app.route("/download_remote/<job_id>/<path:filename>")
 def download_remote(job_id, filename):
     if "/" in filename or ".." in filename or "/" in job_id or ".." in job_id:
         abort(400)
+    cache_key = f"{job_id}/{filename}"
+    hit = _remote_cache.get(cache_key)
+    if hit and time.time() - hit[0] < 900:
+        return _serve_bytes(hit[1], filename)
     cfg = pipeline.load_env()
     tok, repo = cfg.get("GITHUB_TOKEN"), cfg.get("STORAGE_REPO")
     if not tok or not repo:
@@ -616,13 +637,11 @@ def download_remote(job_id, filename):
                          "Accept": "application/vnd.github.raw+json"}, timeout=120)
     if r.status_code != 200:
         abort(404)
-    # serve via send_file with conditional=True so Range requests (download
-    # managers, resumed downloads) get proper 206 responses instead of looping
-    from io import BytesIO
-    from flask import send_file
-    return send_file(BytesIO(r.content), as_attachment=True,
-                     download_name=filename,
-                     mimetype="application/octet-stream", conditional=True)
+    data = r.content
+    _remote_cache[cache_key] = (time.time(), data)
+    while len(_remote_cache) > 24:   # keep the cache tiny
+        _remote_cache.pop(next(iter(_remote_cache)))
+    return _serve_bytes(data, filename)
 
 
 @app.route("/download/<job_id>/<path:filename>")
