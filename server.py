@@ -455,8 +455,14 @@ def generate():
 
     _cleanup_output()
     job_id = uuid.uuid4().hex[:12]
+    seed_warnings = []
+    if params["video_type"] == "teaching" and params["num_keys"] == 9 \
+            and params["target_chars"] < 18000:
+        seed_warnings.append(
+            "Tip: targets under ~18,000 characters fit 6 sections much better than 9 - "
+            "the 9-section escalation needs room to breathe.")
     JOBS[job_id] = {
-        "status": "running", "progress": 0, "warnings": [],
+        "status": "running", "progress": 0, "warnings": seed_warnings,
         "author_display": pipeline.AUTHORS[author_key]["display"],
         "stage": f"Queued ({pipeline.AUTHORS[author_key]['display']})...",
     }

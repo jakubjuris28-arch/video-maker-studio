@@ -167,6 +167,20 @@ def build_script_system(p):
           "quiet resolution line for Carl Jung) - introduce it naturally ('so speak "
           "this decree with me...' or the author's equivalent), speak it once and "
           "repeat it once, keep it under 15 words, and make it DISTINCT for every key.")
+    if p["num_keys"] >= 9 and p.get("target_chars", 40000) < 22000:
+        s += (f"\n\nSHORT TARGET NOTE: the total is small, so compress the key "
+              f"escalation proportionally - keys 1-3 are simply short, medium, "
+              f"longer. ALL {p['num_keys']} keys must still appear, each with its "
+              f"cue line, none merged or dropped.")
+    if p.get("premise_mode", "auto") != "none":
+        s += ("\n\nPREMISE ORDER IS LOCKED: immediately after the title and the single "
+              "bridge sentence comes the PREMISE - read the quote or verse IN FULL and "
+              "speak its source OUT LOUD (the book and verse, or the author and the work "
+              "it comes from, e.g. 'Isaiah sixty-five, verse twenty-four' or 'as Jung "
+              "wrote in Aion'), before anything else. Only AFTER the premise comes the "
+              "participation affirmation (if this video has one), and only after that "
+              "the first key. Never open with a story, a long hook, or any key content "
+              "before the premise has been spoken with its source named.")
     unit = p.get("unit_word") or "keys"
     if unit != "keys":
         u1 = unit.rstrip("s")
@@ -839,6 +853,11 @@ def key_budgets(target_chars, num_keys):
     Keys 4+ have no per-key rule - they share the rest of the target evenly,
     purely as an expansion floor so the TOTAL lands on target_chars."""
     fixed = [1700, 2550, 3400][:min(3, num_keys)]
+    # short targets can't fit the full 2/3/4-minute escalation - scale it down
+    # proportionally so all keys still exist (real runs at 25k+ are untouched)
+    if target_chars < 25000:
+        scale = max(0.25, (target_chars - 3500) / 21500)
+        fixed = [int(f * scale) for f in fixed]
     rest = num_keys - len(fixed)
     if rest <= 0:
         return fixed[:num_keys]
