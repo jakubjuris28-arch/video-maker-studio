@@ -575,25 +575,46 @@ def videos():
         pass
     jobs.sort(key=lambda j: j["age_h"])
 
-    rows = []
+    # group by author (sleep videos join their author's group with a moon mark)
+    groups = {}
     for j in jobs:
-        age = f"{j['age_h']:.1f} h ago" if j["age_h"] < 48 else f"{j['age_h']/24:.1f} days ago"
-        meta_line = " &middot; ".join(x for x in (j["author"], age) if x)
-        base = "/download_remote" if j.get("remote") else "/download"
-        links = ""
-        if j["script"]:
-            links += (f'<a class="dl" href="{base}/{j["id"]}/{j["script"]}">'
-                      f'&#128220; Script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
-        if j["xmind"]:
-            links += (f'<a class="dl" href="{base}/{j["id"]}/{j["xmind"]}">'
-                      f'&#128506; Mindmap <span style="color:#777;font-size:12px">({j["xmind"]})</span></a>')
-        rows.append(
-            f'<details class="panel" style="cursor:pointer">'
-            f'<summary style="color:var(--gold);font-size:16px;font-weight:700">{j["title"]}'
-            f'<span style="color:#999;font-size:12px;font-weight:400;margin-left:10px">{meta_line}</span>'
-            f'</summary><div style="margin-top:10px">{links}</div></details>')
+        raw = (j.get("author") or "Other").strip() or "Other"
+        base = raw.replace(" (sleep)", "")
+        j["is_sleep"] = raw.endswith("(sleep)")
+        groups.setdefault(base, []).append(j)
+    ordered = sorted(groups.items(), key=lambda kv: min(x["age_h"] for x in kv[1]))
 
+    rows = []
+    for author_name, group_jobs in ordered:
+        rows.append(f'<h2 style="color:var(--gold);margin:34px 0 4px;font-size:19px;'
+                    f'border-bottom:1px solid var(--line);padding-bottom:8px">'
+                    f'{author_name} <span style="color:#777;font-size:13px;font-weight:400">'
+                    f'({len(group_jobs)})</span></h2>')
+        for j in group_jobs:
+            rows.append(_video_row(j))
     body = "".join(rows) or '<div class="panel">No stored videos yet.</div>'
+    return _videos_page(body)
+
+
+def _video_row(j):
+    age = f"{j['age_h']:.1f} h ago" if j["age_h"] < 48 else f"{j['age_h']/24:.1f} days ago"
+    moon = "&#127769; " if j.get("is_sleep") else ""
+    base = "/download_remote" if j.get("remote") else "/download"
+    links = ""
+    if j["script"]:
+        links += (f'<a class="dl" href="{base}/{j["id"]}/{j["script"]}">'
+                  f'&#128220; Script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
+    if j["xmind"]:
+        links += (f'<a class="dl" href="{base}/{j["id"]}/{j["xmind"]}">'
+                  f'&#128506; Mindmap <span style="color:#777;font-size:12px">({j["xmind"]})</span></a>')
+    return (
+        f'<details class="panel" style="cursor:pointer;margin-top:12px">'
+        f'<summary style="color:var(--gold);font-size:16px;font-weight:700">{moon}{j["title"]}'
+        f'<span style="color:#999;font-size:12px;font-weight:400;margin-left:10px">{age}</span>'
+        f'</summary><div style="margin-top:10px">{links}</div></details>')
+
+
+def _videos_page(body):
     return f"""<!doctype html><html><head><meta charset="utf-8">
 <title>Stored videos</title><style>{PAGE.split('<style>')[1].split('</style>')[0]}</style></head>
 <body><div class="wrap"><h1>Stored videos
