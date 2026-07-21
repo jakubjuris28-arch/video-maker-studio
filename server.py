@@ -83,7 +83,7 @@ PAGE = """<!doctype html>
 </head>
 <body>
 <div class="wrap">
-  <h1>Video Maker Studio <a href="/videos" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">📁 Stored videos</a></h1>
+  <h1>Video Maker Studio <a href="/videos" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">📁 Stored videos</a><a href="/users" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin-right:10px">👤 Users</a></h1>
   <p class="sub">Faceless video packages &mdash; pick the author, type the title, get script + mindmap.</p>
 
   <form id="form">
@@ -362,19 +362,126 @@ restoreForm();
 
 
 # --------------------------------------------------------------------------
-# Password gate (active only when APP_PASSWORD is set, e.g. on Render).
+# Users + password gate. The APP_PASSWORD is the ADMIN master key; extra
+# users live hashed in the private storage repo (users.json), so they
+# persist across restarts and are shared by the local and cloud apps.
 # --------------------------------------------------------------------------
-@app.before_request
-def _password_gate():
+from werkzeug.security import generate_password_hash, check_password_hash
+
+_users_cache = {"t": 0.0, "users": {}, "sha": None}
+
+
+def _load_users(force=False):
+    if not force and time.time() - _users_cache["t"] < 60:
+        return _users_cache["users"]
+    users, sha = {}, None
+    try:
+        cfg = pipeline.load_env()
+        r = pipeline._gh(cfg, "GET", "contents/users.json")
+        if r is not None and r.status_code == 200:
+            import base64 as _b64
+            d = r.json()
+            users = _json.loads(_b64.b64decode(d["content"]).decode("utf-8"))
+            sha = d.get("sha")
+    except Exception:
+        users = _users_cache["users"]   # keep last known on hiccup
+    _users_cache.update(t=time.time(), users=users, sha=sha)
+    return users
+
+
+def _save_users(users):
+    cfg = pipeline.load_env()
+    _load_users(force=True)   # refresh sha
+    ok = pipeline._archive_put(
+        cfg, "users.json",
+        _json.dumps(users, ensure_ascii=False, indent=1).encode("utf-8"),
+        "update users", _users_cache["sha"])
+    if ok:
+        _users_cache.update(t=time.time(), users=users)
+    return ok
+
+
+def _auth_role():
+    """'admin', a username, or None. No APP_PASSWORD (local) -> admin."""
     pw = os.environ.get("APP_PASSWORD", "").strip()
     if not pw:
-        return  # no password configured (local use) -> open
+        return "admin"
     auth = request.authorization
-    if auth and auth.password == pw:
-        return
-    from flask import Response
-    return Response("Login required.", 401,
-                    {"WWW-Authenticate": 'Basic realm="Video Maker Studio"'})
+    if not auth or not auth.password:
+        return None
+    if auth.password == pw:
+        return "admin"
+    uname = (auth.username or "").strip().lower()
+    rec = _load_users().get(uname)
+    if rec and check_password_hash(rec.get("hash", ""), auth.password):
+        return uname
+    return None
+
+
+@app.before_request
+def _password_gate():
+    if _auth_role() is None:
+        from flask import Response
+        return Response("Login required.", 401,
+                        {"WWW-Authenticate": 'Basic realm="Video Maker Studio"'})
+
+
+@app.route("/users", methods=["GET"])
+def users_page():
+    if _auth_role() != "admin":
+        return "Only the admin (master password) can manage users.", 403
+    users = _load_users(force=True)
+    rows = "".join(
+        f'<div class="panel" style="display:flex;justify-content:space-between;align-items:center">'
+        f'<b style="color:var(--gold)">{u}</b>'
+        f'<form method="post" action="/users/delete" style="margin:0">'
+        f'<input type="hidden" name="name" value="{u}">'
+        f'<button style="margin:0;padding:8px 16px;background:#5a2222;color:#eee">Delete</button>'
+        f'</form></div>'
+        for u in sorted(users)) or '<div class="panel">No extra users yet - only the admin password works.</div>'
+    style = PAGE.split("<style>")[1].split("</style>")[0]
+    return f"""<!doctype html><html><head><meta charset="utf-8"><title>Users</title>
+<style>{style}</style></head><body><div class="wrap">
+<h1>Users <a href="/" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">&#8592; Generator</a></h1>
+<p style="color:#999;font-size:13px">Each user signs in with their own name + password (any page, the normal login box).
+The admin master password always works. Passwords are stored hashed in the private vault - never in the code.</p>
+<div class="panel"><form method="post" action="/users/add">
+<label>New username</label><input type="text" name="name" placeholder="e.g. robin" autocomplete="off" required>
+<label>Password</label><input type="text" name="password" placeholder="min 5 characters" autocomplete="off" required>
+<button>Create user</button></form></div>
+{rows}</div></body></html>"""
+
+
+@app.route("/users/add", methods=["POST"])
+def users_add():
+    if _auth_role() != "admin":
+        return "Admin only.", 403
+    name = (request.form.get("name") or "").strip().lower()
+    pw = (request.form.get("password") or "").strip()
+    import re as _re
+    if not _re.fullmatch(r"[a-z0-9_.-]{2,24}", name):
+        return "Bad username (letters/numbers only, 2-24 chars). Go back and retry.", 400
+    if len(pw) < 5:
+        return "Password too short (min 5 characters). Go back and retry.", 400
+    users = dict(_load_users(force=True))
+    users[name] = {"hash": generate_password_hash(pw)}
+    if not _save_users(users):
+        return "Could not save (storage vault unreachable). Try again.", 500
+    from flask import redirect
+    return redirect("/users")
+
+
+@app.route("/users/delete", methods=["POST"])
+def users_delete():
+    if _auth_role() != "admin":
+        return "Admin only.", 403
+    name = (request.form.get("name") or "").strip().lower()
+    users = dict(_load_users(force=True))
+    users.pop(name, None)
+    if not _save_users(users):
+        return "Could not save (storage vault unreachable). Try again.", 500
+    from flask import redirect
+    return redirect("/users")
 
 
 # --------------------------------------------------------------------------
