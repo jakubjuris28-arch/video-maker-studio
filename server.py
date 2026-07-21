@@ -371,6 +371,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 _users_cache = {"t": 0.0, "users": {}, "sha": None}
 
 
+def _available_keys():
+    """['kubko', 'named:robin', ...] - the built-in keys an admin can assign."""
+    cfg = pipeline.load_env()
+    named = sorted(k[len("ANTHROPIC_API_KEY_"):].lower()
+                   for k in cfg if k.startswith("ANTHROPIC_API_KEY_") and cfg[k])
+    return ["kubko"] + [f"named:{n}" for n in named]
+
+
 def _load_users(force=False):
     if not force and time.time() - _users_cache["t"] < 60:
         return _users_cache["users"]
@@ -431,14 +439,29 @@ def users_page():
     if _auth_role() != "admin":
         return "Only the admin (master password) can manage users.", 403
     users = _load_users(force=True)
+    keys = _available_keys()
+
+    def _key_select(selected):
+        opts = "".join(
+            f'<option value="{k}"{" selected" if k == selected else ""}>'
+            f'{k.replace("named:", "") + (" (built-in)" if True else "")}</option>'
+            for k in keys)
+        return opts
+
     rows = "".join(
-        f'<div class="panel" style="display:flex;justify-content:space-between;align-items:center">'
+        f'<div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
         f'<b style="color:var(--gold)">{u}</b>'
+        f'<form method="post" action="/users/setkey" style="margin:0;display:flex;gap:8px;align-items:center">'
+        f'<input type="hidden" name="name" value="{u}">'
+        f'<span class="hint">pays with:</span>'
+        f'<select name="api_key" style="width:auto">{_key_select(rec.get("api_key", "kubko"))}</select>'
+        f'<button style="margin:0;padding:8px 14px">Set</button>'
+        f'</form>'
         f'<form method="post" action="/users/delete" style="margin:0">'
         f'<input type="hidden" name="name" value="{u}">'
         f'<button style="margin:0;padding:8px 16px;background:#5a2222;color:#eee">Delete</button>'
         f'</form></div>'
-        for u in sorted(users)) or '<div class="panel">No extra users yet - only the admin password works.</div>'
+        for u, rec in sorted(users.items())) or '<div class="panel">No extra users yet - only the admin password works.</div>'
     style = PAGE.split("<style>")[1].split("</style>")[0]
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>Users</title>
 <style>{style}</style></head><body><div class="wrap">
@@ -448,6 +471,8 @@ The admin master password always works. Passwords are stored hashed in the priva
 <div class="panel"><form method="post" action="/users/add">
 <label>New username</label><input type="text" name="name" placeholder="e.g. robin" autocomplete="off" required>
 <label>Password</label><input type="text" name="password" placeholder="min 5 characters" autocomplete="off" required>
+<label>Pays with (the API key this user is locked to)</label>
+<select name="api_key">{"".join(f'<option value="{k}">{k.replace("named:", "")} (built-in)</option>' for k in keys)}</select>
 <button>Create user</button></form></div>
 {rows}</div></body></html>"""
 
@@ -463,8 +488,29 @@ def users_add():
         return "Bad username (letters/numbers only, 2-24 chars). Go back and retry.", 400
     if len(pw) < 5:
         return "Password too short (min 5 characters). Go back and retry.", 400
+    api_key = request.form.get("api_key") or "kubko"
+    if api_key not in _available_keys():
+        api_key = "kubko"
     users = dict(_load_users(force=True))
-    users[name] = {"hash": generate_password_hash(pw)}
+    users[name] = {"hash": generate_password_hash(pw), "api_key": api_key}
+    if not _save_users(users):
+        return "Could not save (storage vault unreachable). Try again.", 500
+    from flask import redirect
+    return redirect("/users")
+
+
+@app.route("/users/setkey", methods=["POST"])
+def users_setkey():
+    if _auth_role() != "admin":
+        return "Admin only.", 403
+    name = (request.form.get("name") or "").strip().lower()
+    api_key = request.form.get("api_key") or "kubko"
+    if api_key not in _available_keys():
+        return "Unknown key.", 400
+    users = dict(_load_users(force=True))
+    if name not in users:
+        return "No such user.", 404
+    users[name] = dict(users[name], api_key=api_key)
     if not _save_users(users):
         return "Could not save (storage vault unreachable). Try again.", 500
     from flask import redirect
@@ -489,12 +535,18 @@ def users_delete():
 # --------------------------------------------------------------------------
 @app.route("/")
 def index():
-    cfg = pipeline.load_env()
-    named = sorted(k[len("ANTHROPIC_API_KEY_"):].lower()
-                   for k in cfg if k.startswith("ANTHROPIC_API_KEY_") and cfg[k])
-    key_opts = '<option value="kubko">kubko (built-in)</option>'
-    key_opts += "".join(f'<option value="named:{n}">{n} (built-in)</option>' for n in named)
-    key_opts += '<option value="custom">my own key (paste below)</option>'
+    role = _auth_role()
+    rec = _load_users().get(role) if role not in ("admin", None) else None
+    if rec and rec.get("api_key"):
+        label = rec["api_key"].replace("named:", "")
+        key_opts = f'<option value="assigned">{label} (assigned by admin)</option>'
+    else:
+        cfg = pipeline.load_env()
+        named = sorted(k[len("ANTHROPIC_API_KEY_"):].lower()
+                       for k in cfg if k.startswith("ANTHROPIC_API_KEY_") and cfg[k])
+        key_opts = '<option value="kubko">kubko (built-in)</option>'
+        key_opts += "".join(f'<option value="named:{n}">{n} (built-in)</option>' for n in named)
+        key_opts += '<option value="custom">my own key (paste below)</option>'
     return (PAGE.replace("__AUTHOR_OPTIONS__", _OPTS)
                 .replace("__AUTHOR_META__", _META)
                 .replace("__KEY_OPTIONS__", key_opts))
@@ -548,6 +600,13 @@ def generate():
         return jsonify({"error": "Type the custom topic or author (e.g. 'spirituality "
                                   "in general') - nothing was generated."}), 400
     key_choice = d.get("api_key_choice") or "kubko"
+    _role = _auth_role()
+    if _role not in ("admin", None):
+        _rec = _load_users().get(_role) or {}
+        if _rec.get("api_key"):
+            # this user is locked to an admin-assigned key - whatever the
+            # browser sent is overridden here
+            key_choice = _rec["api_key"]
     if key_choice == "custom":
         ck = (d.get("custom_api_key") or "").strip()
         if not ck.startswith("sk-ant-") or len(ck) < 30:
