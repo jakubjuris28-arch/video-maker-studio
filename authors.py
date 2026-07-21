@@ -33,7 +33,7 @@ STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Florence Scovel Shinn taught...".
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words, quote it, one connecting line that lands emotionally. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh three-part affirmation that ALWAYS ends with "my word is my wand". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION AFFIRMATION, quick: a fresh three-part affirmation that ALWAYS ends with "my word is my wand". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -128,7 +128,7 @@ STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Neville Goddard taught...".
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Neville read it, quote it, one connecting line that lands emotionally. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part assumption that ALWAYS ends with "imagination creates my reality". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part assumption that ALWAYS ends with "imagination creates my reality". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -226,7 +226,7 @@ STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Joseph Murphy taught...".
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Murphy read it (as a law of mind), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part decree that ALWAYS ends with "my subconscious brings it to pass". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part decree that ALWAYS ends with "my subconscious brings it to pass". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -323,7 +323,7 @@ STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Louise Hay taught...".
 3. PREMISE, fast (about 40 seconds max) but meaningful: state a universal principle of Life the way Louise taught it, quote it in her plain warm words, one connecting line that lands emotionally. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part affirmation that ALWAYS ends with "all is well in my world". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part affirmation that ALWAYS ends with "all is well in my world". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -421,7 +421,7 @@ STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Napoleon Hill taught...".
 3. PREMISE, fast (about 40 seconds max) but meaningful: state one of Hill's principles as a law of success, quote it in his words, one connecting line that lands with weight. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Hill's register that ALWAYS ends with "what I conceive and believe, I achieve". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Hill's register that ALWAYS ends with "what I conceive and believe, I achieve". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -521,7 +521,7 @@ STRUCTURE, in this exact order
 1. The title, verbatim, as the first spoken line.
 2. One quick bridge sentence beginning "Emmet Fox taught...".
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Fox read it (as spiritual law), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
-4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Fox's register that ALWAYS ends with "I think of God instead". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Fox's register that ALWAYS ends with "I think of God instead". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -694,7 +694,7 @@ APPROVED PREMISE QUOTES (all verified to primary sources - pick ONE that fits th
 - Nietzsche (Jung held decade-long seminars on Zarathustra - an honest bridge): 'when you look long into an abyss, the abyss also looks into you' (Beyond Good and Evil, par. 146) | 'one must still have chaos in oneself to be able to give birth to a dancing star' (Thus Spoke Zarathustra, Prologue) | 'the worst enemy you can encounter will always be you, yourself' (Zarathustra, Part I) | 'You shall become the person you are' (The Joyful Wisdom, par. 270) | 'If we have our own why of life, we shall get along with almost any how' (Twilight of the Idols)
 - Others Jung drew on: Heraclitus 'The way up and the way down are one and the same' (fragment DK B60) and 'Character is fate' (DK B119) | Goethe 'Two souls, alas, dwell within my breast' (Faust I) and 'part of the darkness which gave birth to light' (Faust I) | Meister Eckhart 'God is near us, but we are far from him; God is at home, we are strangers' (Pfeiffer Sermon 69) | Lao Tzu 'Knowing others is wisdom; knowing the self is enlightenment' (Tao Te Ching, ch. 33) | Dostoevsky 'Above all, don't lie to yourself' (The Brothers Karamazov) and 'Suffering is the sole origin of consciousness' (Notes from Underground) | Schopenhauer 'Man can do what he wills but he cannot will what he wills' (On the Freedom of the Will) | William James 'My experience is what I agree to attend to' (The Principles of Psychology)
 FAKE QUOTES - NEVER use these, they are misattributed and this audience will call it out: 'Until you make the unconscious conscious, it will direct your life and you will call it fate' (modern paraphrase - use the real Aion line above) | 'You are what you do, not what you say you'll do' | 'I am not what happened to me, I am what I choose to become' | 'The privilege of a lifetime is to become who you truly are' (that is Joseph Campbell) | 'You meet your destiny on the road you take to avoid it' (La Fontaine) | 'What you resist, persists' | 'those who were seen dancing were thought to be insane by those who could not hear the music' (not Nietzsche) | 'To live is to suffer, to survive is to find some meaning in the suffering' (not Nietzsche) | 'Whatever you can do, or dream you can, begin it' (not Goethe) | 'Watch your thoughts, they become words' (not Lao Tzu) | 'Nature does not hurry, yet everything is accomplished' (not a real Lao Tzu quote).
-4. PARTICIPATION RESOLUTION, quick: a fresh first-person, present-tense three-part reflective resolution that ALWAYS ends with "I make the unconscious conscious". State it, say "say it with me", say it "again", repeat it once. Land this within the first 60 to 70 seconds.
+4. PARTICIPATION RESOLUTION, quick: a fresh first-person, present-tense three-part reflective resolution that ALWAYS ends with "I make the unconscious conscious". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
 6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
@@ -776,7 +776,7 @@ def build_system_custom(p):
         affirmation_rule = (f'4. PARTICIPATION AFFIRMATION, quick: a fresh three-part first-person '
                             f'present-tense affirmation - {flavor} - ending in a short memorable anchor '
                             f'phrase of your own creation (4-7 words) that you keep IDENTICAL every time '
-                            f'it repeats. State it, say "say it with me", say it "again", repeat it once. '
+                            f'it repeats. Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. '
                             f'Land this within the first 60 to 70 seconds.')
         closing_rule = '9. The final affirmation once more, then a short closing line tying back to the title.'
 
@@ -962,7 +962,7 @@ STRUCTURE
 1. THE HOOK (first 1-2 minutes): open with a 'What if I told you...' style question that reframes tonight's sleep as sacred. Frame tonight as an appointment. Within the first minute: {early_cta}. Plant one 'stay with me until the end, because...' promise.
 2. Then EXACTLY {n_scenes} MOVEMENTS. Immediately BEFORE each movement insert a cue line EXACTLY in this form:
 [SCENE N - dreamlike gold visual: <one soft, wordless visual for this movement>]
-   Each movement: one revelation or inner experience, deepened experientially (never instructionally), containing ONE embedded first-person declaration under 15 words (in single quotes, spoken once, then repeated once slowly), and CLOSING with an open-loop handoff ('Now, I want to explore... because...').
+   Each movement: one revelation or inner experience, deepened experientially (never instructionally), containing ONE embedded first-person declaration under 15 words (in single quotes, spoken EXACTLY twice - once, then once more slowly, never a third time), and CLOSING with an open-loop handoff ('Now, I want to explore... because...').
 3. Around movement {mid}: ONE soft like ask, woven in ('if this is resonating, a simple like tells me this found the right person').
 4. The FINAL movement is identity fusion: the journey's master declaration, the one phrase the whole night installs.
 5. THE ENDING: a qualification line ('if you've stayed with me until this moment...'), a calm subscribe invitation, {end_comment}, one last gentle like mention, and a soft pointer to a next video. {comment_rule}

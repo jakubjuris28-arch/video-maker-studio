@@ -172,6 +172,10 @@ def build_script_system(p):
               f"escalation proportionally - keys 1-3 are simply short, medium, "
               f"longer. ALL {p['num_keys']} keys must still appear, each with its "
               f"cue line, none merged or dropped.")
+    if p.get("affirmation_mode", "adjusted") != "none":
+        s += ("\n\nAFFIRMATION COUNT IS LOCKED: in its section the participation "
+              "affirmation is spoken EXACTLY TWICE - count them - and nowhere else "
+              "except the single final echo in the closing.")
     if p.get("premise_mode", "auto") != "none":
         s += ("\n\nPREMISE ORDER IS LOCKED: immediately after the title and the single "
               "bridge sentence comes the PREMISE - read the quote or verse IN FULL and "
