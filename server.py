@@ -835,12 +835,16 @@ def _serve_bytes(data, filename):
 
 @app.route("/download_remote/<job_id>/<path:filename>")
 def download_remote(job_id, filename):
+    blocked = _repeat_guard(f"{job_id}/{filename}")
+    if blocked is not None:
+        return blocked
+    return _fetch_remote(job_id, filename)
+
+
+def _fetch_remote(job_id, filename):
     if "/" in filename or ".." in filename or "/" in job_id or ".." in job_id:
         abort(400)
     cache_key = f"{job_id}/{filename}"
-    blocked = _repeat_guard(cache_key)
-    if blocked is not None:
-        return blocked
     hit = _remote_cache.get(cache_key)
     if hit and time.time() - hit[0] < 900:
         return _serve_bytes(hit[1], filename)
@@ -872,8 +876,8 @@ def download(job_id, filename):
     folder = os.path.join(OUTPUT_ROOT, job_id)
     if not os.path.isdir(folder) or not os.path.isfile(os.path.join(folder, filename)):
         # local copy gone (server restarted / disk wiped) - fall back to the
-        # permanent archive so old download links keep working
-        return download_remote(job_id, filename)
+        # permanent archive (already guarded once above - no second count)
+        return _fetch_remote(job_id, filename)
     return send_from_directory(folder, filename, as_attachment=True)
 
 
