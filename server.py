@@ -347,13 +347,31 @@ function showResults(jobId, j){
 
   let html = '';
   (j.result.files||[]).forEach(f => {
-    html += '<a class="dl" href="/download/'+jobId+'/'+encodeURIComponent(f)+'">&#8681; '+f+'</a>';
+    const url = '/download/'+jobId+'/'+encodeURIComponent(f);
+    if (f.endsWith('.txt')) {
+      html += '<a class="dl" href="#" onclick="copyScript(\''+url+'\', this); return false;">&#128203; Copy script <span style="color:#777;font-size:12px">('+f+')</span></a>';
+    } else {
+      html += '<a class="dl" href="'+url+'">&#8681; '+f+'</a>';
+    }
   });
   document.getElementById('downloads').innerHTML = html;
 
   let w = '';
   (j.warnings||[]).forEach(x => { w += '<div class="warn">&#9888; '+x+'</div>'; });
   document.getElementById('warnings').innerHTML = w;
+}
+async function copyScript(url, el){
+  try {
+    const r = await fetch(url);
+    if (!r.ok) { el.textContent = 'Could not load the script (' + r.status + ')'; return; }
+    const t = await r.text();
+    try { await navigator.clipboard.writeText(t); }
+    catch(e) {
+      const ta = document.createElement('textarea'); ta.value = t;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    el.innerHTML = '&#9989; Copied! (' + t.length.toLocaleString() + ' characters in clipboard)';
+  } catch(e) { el.textContent = 'Copy failed - ' + e; }
 }
 restoreForm();
 </script>
@@ -768,8 +786,8 @@ def _video_row(j):
     base = "/download_remote" if j.get("remote") else "/download"
     links = ""
     if j["script"]:
-        links += (f'<a class="dl" href="{base}/{j["id"]}/{j["script"]}">'
-                  f'&#128220; Script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
+        links += (f'<a class="dl" href="#" onclick="copyScript(\'{base}/{j["id"]}/{j["script"]}\', this); return false;">'
+                  f'&#128203; Copy script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
     if j["xmind"]:
         links += (f'<a class="dl" href="{base}/{j["id"]}/{j["xmind"]}">'
                   f'&#128506; Mindmap <span style="color:#777;font-size:12px">({j["xmind"]})</span></a>')
@@ -787,7 +805,22 @@ def _videos_page(body):
 <a href="/" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">&#8592; Generator</a></h1>
 <p style="color:#999;font-size:13px">Every generated script and mindmap is kept here for {KEEP_DAYS*24:g} hours, then deleted automatically.
 On the free cloud server the storage is also cleared whenever the server restarts or updates - download anything important right away; the local app keeps the full {KEEP_DAYS*24:g} hours reliably.</p>
-{body}</div></body></html>"""
+{body}</div>
+<script>
+async function copyScript(url, el) {{
+  try {{
+    const r = await fetch(url);
+    if (!r.ok) {{ el.textContent = 'Could not load the script (' + r.status + ')'; return; }}
+    const t = await r.text();
+    try {{ await navigator.clipboard.writeText(t); }}
+    catch(e) {{
+      const ta = document.createElement('textarea'); ta.value = t;
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }}
+    el.innerHTML = '&#9989; Copied! (' + t.length.toLocaleString() + ' characters in clipboard)';
+  }} catch(e) {{ el.textContent = 'Copy failed - ' + e; }}
+}}
+</script></body></html>"""
 
 
 # hard repeat-guard: if any client loops on the same file (broken download
