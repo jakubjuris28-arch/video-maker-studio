@@ -349,12 +349,15 @@ function showResults(jobId, j){
   (j.result.files||[]).forEach(f => {
     const url = '/download/'+jobId+'/'+encodeURIComponent(f);
     if (f.endsWith('.txt')) {
-      html += '<a class="dl" href="#" onclick="copyScript(\''+url+'\', this); return false;">&#128203; Copy script <span style="color:#777;font-size:12px">('+f+')</span></a>';
+      html += '<a class="dl copybtn" href="#" data-url="'+url+'">&#128203; Copy script <span style="color:#777;font-size:12px">('+f+')</span></a>';
     } else {
       html += '<a class="dl" href="'+url+'">&#8681; '+f+'</a>';
     }
   });
   document.getElementById('downloads').innerHTML = html;
+  document.querySelectorAll('#downloads .copybtn').forEach(a => {
+    a.onclick = () => { copyScript(a.dataset.url, a); return false; };
+  });
 
   let w = '';
   (j.warnings||[]).forEach(x => { w += '<div class="warn">&#9888; '+x+'</div>'; });
@@ -786,7 +789,7 @@ def _video_row(j):
     base = "/download_remote" if j.get("remote") else "/download"
     links = ""
     if j["script"]:
-        links += (f'<a class="dl" href="#" onclick="copyScript(\'{base}/{j["id"]}/{j["script"]}\', this); return false;">'
+        links += (f'<a class="dl copybtn" href="#" data-url="{base}/{j["id"]}/{j["script"]}">'
                   f'&#128203; Copy script <span style="color:#777;font-size:12px">({j["script"]})</span></a>')
     if j["xmind"]:
         links += (f'<a class="dl" href="{base}/{j["id"]}/{j["xmind"]}">'
@@ -807,6 +810,10 @@ def _videos_page(body):
 On the free cloud server the storage is also cleared whenever the server restarts or updates - download anything important right away; the local app keeps the full {KEEP_DAYS*24:g} hours reliably.</p>
 {body}</div>
 <script>
+document.addEventListener('click', ev => {{
+  const a = ev.target.closest('.copybtn');
+  if (a) {{ ev.preventDefault(); copyScript(a.dataset.url, a); }}
+}});
 async function copyScript(url, el) {{
   try {{
     const r = await fetch(url);
