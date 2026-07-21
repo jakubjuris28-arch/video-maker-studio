@@ -797,6 +797,9 @@ _serve_log = {}
 
 def _repeat_guard(key):
     import time as _t
+    # probes and resume-chunks are part of ONE download - never count or block them
+    if request.method == "HEAD" or request.headers.get("Range"):
+        return None
     now = _t.time()
     hits = [t for t in _serve_log.get(key, []) if now - t < 120]
     if len(hits) >= 3:
