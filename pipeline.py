@@ -1247,6 +1247,162 @@ def run_pipeline_sleep(job_id, p, job, output_root):
         job.update(stage=f"Error: {e}", progress=100, status="error", error=str(e))
 
 
+def run_pipeline_mm(job_id, p, job, output_root):
+    """Mindmap-only mode: the user pastes a finished script, we extract the
+    meta package and build the mindmap (teaching or sleep shape, auto-detected)."""
+    from authors import META_SLEEP
+    try:
+        job["warnings"] = []
+        cfg = load_env()
+        if p.get("custom_api_key"):
+            cfg["ANTHROPIC_API_KEY"] = p["custom_api_key"]
+        author = AUTHORS[p.get("author") or "shinn"]
+        p["author"] = p.get("author") or "shinn"
+        p["author_display"] = author["display"]
+        signature = author["signature"]
+        if p["author"] == "auto":
+            p["author_display"] = "Auto (from title)"
+            signature = ""
+        model = p.get("model_override") or cfg.get("MODEL", "claude-sonnet-5")
+        script = (p.get("script_text") or "").strip()
+        if len(script) < 500:
+            raise ValueError("Paste the whole script (at least 500 characters).")
+
+        # ---- auto-detection ----
+        title = next((l.strip() for l in script.splitlines() if l.strip()
+                      and not l.strip().startswith("[")), "Untitled")[:120]
+        key_cues = len(KEY_CUE_RE.findall(script))
+        scene_cues = len(SCENE_CUE_RE.findall(script))
+        is_sleep = scene_cues > key_cues
+        low = script.lower()
+        unit_word = "keys"
+        for u in ("decree", "sign", "law"):
+            if f"first {u} is" in low:
+                unit_word = u + "s"
+                break
+        num_keys = key_cues if key_cues in (6, 9) else (9 if key_cues > 9 else max(key_cues, 6))
+        slug = slugify(title)
+        do_images = p.get("do_images", True)
+
+        out_dir = os.path.join(output_root, job_id)
+        os.makedirs(out_dir, exist_ok=True)
+        try:
+            with open(os.path.join(out_dir, "_title.txt"), "w", encoding="utf-8") as fh:
+                fh.write(title + "\n" + p["author_display"] + " (mm)")
+        except Exception:
+            pass
+        script_path = os.path.join(out_dir, f"{slug}_RECORDING.txt")
+        with open(script_path, "w", encoding="utf-8") as fh:
+            fh.write(script)
+
+        # ---- meta extraction ----
+        job.update(stage="Reading the script + extracting the mindmap data...", progress=20)
+        meta = None
+        meta_raw = None
+        if is_sleep:
+            meta_system = META_SLEEP
+            user_msg = (f"The script has {scene_cues} [SCENE N ...] movements.\n\n"
+                        f"Here is the finished script:\n\n{script}\n\nReturn the JSON package now.")
+        else:
+            meta_system = author["meta_system"]
+            user_msg = (f"The video has EXACTLY {key_cues or num_keys} keys. The comment CTA is "
+                        f"\"{p.get('cta') or author['cta_default']}\".\n\nHere is the finished "
+                        f"script:\n\n{script}\n\nReturn the JSON package now, with exactly "
+                        f"{key_cues or num_keys} keys.")
+        for attempt in range(3):
+            try:
+                meta_raw = call_anthropic(cfg, model, meta_system, user_msg, 16000, strict=True)
+                cand = parse_json_loose(meta_raw)
+                if is_sleep:
+                    if len(cand.get("movements") or []) < 4:
+                        raise ValueError("too few movements")
+                else:
+                    if not cand.get("keys"):
+                        raise ValueError("no keys in meta")
+                meta = cand
+                break
+            except Exception:
+                continue
+        if meta is None and meta_raw:
+            try:
+                fixed = call_anthropic(cfg, model,
+                    "You repair broken JSON. Escape inner double quotes, remove trailing "
+                    "commas, return ONLY the corrected JSON object.", meta_raw, 16000)
+                meta = parse_json_loose(fixed)
+                job["warnings"].append("Meta needed a repair pass.")
+            except Exception as e:
+                raise ValueError(f"Could not extract mindmap data: {e}")
+        if not is_sleep and meta is not None:
+            try:
+                _check_meta_lengths(meta)
+            except ValueError:
+                try:
+                    meta = compress_meta(cfg, model, meta)
+                except Exception:
+                    pass
+
+        # ---- images ----
+        images = {}
+        if do_images and meta:
+            items = meta.get("movements") if is_sleep else meta.get("keys")
+            items = items or []
+            def _one_image(idx, pr):
+                png = generate_image(pr, cfg)
+                with open(os.path.join(out_dir, f"{slug}_mk{idx+1}.png"), "wb") as fh:
+                    fh.write(png)
+                return png
+            futures = {}
+            with ThreadPoolExecutor(max_workers=5) as ex:
+                for i, k in enumerate(items):
+                    pr = (k.get("gemini_prompt") or "").strip()
+                    if not pr:
+                        concept = k.get("image_slot") or k.get("title") or "a golden light"
+                        style = SLEEP_IMAGE_STYLE if is_sleep else FALLBACK_IMAGE_STYLE
+                        pr = style.format(concept=concept)
+                    futures[ex.submit(_one_image, i, pr)] = i
+                job.update(stage=f"Generating {len(futures)} images (in parallel)...", progress=40)
+                done = 0
+                for fut in as_completed(futures):
+                    i = futures[fut]
+                    try:
+                        images[i] = fut.result()
+                    except Exception as e:
+                        job["warnings"].append(f"Image {i+1} failed: {e}")
+                    done += 1
+                    job.update(stage=f"Images ({done}/{len(futures)})...",
+                               progress=40 + int(45 * done / max(len(futures), 1)))
+        elif not do_images:
+            job["warnings"].append("Image generation skipped (checkbox off).")
+
+        # ---- mindmap ----
+        job.update(stage="Building the mindmap...", progress=90)
+        xmind_path = os.path.join(out_dir, f"{slug}_MindMap.xmind")
+        if is_sleep:
+            build_xmind_sleep(xmind_path, title, meta, images, signature=signature)
+        else:
+            akey = p["author"].upper()
+            product = cfg.get(f"PRODUCT_NAME_{akey}") or cfg.get("PRODUCT_NAME") or author["product_default"]
+            funnel = cfg.get(f"FUNNEL_CHANNEL_{akey}") or cfg.get("FUNNEL_CHANNEL") or author["funnel_default"]
+            build_xmind(xmind_path, title, num_keys, p.get("ending", "none"), meta, images,
+                        product_name=product, funnel_channel=funnel,
+                        signature=signature,
+                        product_fallback=author["product_pitch_fallback"],
+                        anchor=author.get("anchor", ""),
+                        unit_word=unit_word)
+
+        job.update(stage="Archiving to permanent storage...", progress=97)
+        archive_job(cfg, job_id, title, p["author_display"] + " (mm)",
+                    [xmind_path], job["warnings"].append)
+        job["result"] = {
+            "files": [os.path.basename(xmind_path)],
+            "stats": compute_stats(script), "slug": slug,
+        }
+        job.update(stage="Done", progress=100, status="done")
+    except Exception as e:
+        job["warnings"] = job.get("warnings", [])
+        job.update(stage=f"Error: {e}", progress=100, status="error", error=str(e))
+
+
 def run_pipeline(job_id, p, job, output_root):
     """Mutates `job` in place: job['stage'], job['progress'], job['status'],
     job['warnings'], job['result']."""

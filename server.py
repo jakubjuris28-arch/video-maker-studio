@@ -83,7 +83,7 @@ PAGE = """<!doctype html>
 </head>
 <body>
 <div class="wrap">
-  <h1>Video Maker Studio <a href="/videos" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">📁 Stored videos</a><a href="/users" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin-right:10px">👤 Users</a></h1>
+  <h1>Video Maker Studio <a href="/videos" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">📁 Stored videos</a><a href="/users" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin-right:10px">👤 Users</a><a href="/mm" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;margin-right:10px">🧠 MM</a></h1>
   <p class="sub">Faceless video packages &mdash; pick the author, type the title, get script + mindmap.</p>
 
   <form id="form">
@@ -453,6 +453,115 @@ def _password_gate():
         from flask import Response
         return Response("Login required.", 401,
                         {"WWW-Authenticate": 'Basic realm="Video Maker Studio"'})
+
+
+@app.route("/mm", methods=["GET"])
+def mm_page():
+    author_opts = "".join(f'<option value="{k}">{v["display"]}</option>'
+                          for k, v in pipeline.AUTHORS.items())
+    style = PAGE.split("<style>")[1].split("</style>")[0]
+    return f"""<!doctype html><html><head><meta charset="utf-8"><title>Script to Mindmap</title>
+<style>{style}</style></head><body><div class="wrap">
+<h1>Script &#8594; Mindmap <a href="/" style="float:right;font-size:14px;color:var(--gold);text-decoration:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px;">&#8592; Generator</a></h1>
+<p class="sub">Paste any finished script - you get just the mindmap. Title, number of sections, teaching vs sleep, and keys/decrees are detected automatically.</p>
+<form id="mmform">
+<label>Script <span class="hint">(paste the whole thing)</span></label>
+<textarea name="script_text" id="mm_script" style="min-height:260px" required></textarea>
+<label>Author style <span class="hint">(controls the extraction voice + the signature on the map)</span></label>
+<select name="author" id="mm_author">{author_opts}</select>
+<label>Ending type <span class="hint">(for the Daily Covenant / funnel nodes)</span></label>
+<select name="ending" id="mm_ending">
+<option value="none">none</option>
+<option value="product">product (course pitch)</option>
+<option value="funnel">funnel (second channel)</option>
+</select>
+<div class="check"><input type="checkbox" id="mm_images" checked>
+<label for="mm_images">Generate images and embed them</label></div>
+<button type="submit" id="mm_go">Create mindmap</button>
+</form>
+<div class="panel hidden" id="mm_progress"><div class="stage" id="mm_stage">Starting...</div>
+<div class="bar"><div class="fill" id="mm_fill"></div></div></div>
+<div class="panel hidden" id="mm_results"><h3 style="color:var(--gold);margin-top:0">Mindmap ready</h3>
+<div id="mm_downloads"></div><div id="mm_warnings"></div></div>
+<script>
+const mmForm = document.getElementById('mmform');
+let mmPoll = null;
+mmForm.addEventListener('submit', async (e) => {{
+  e.preventDefault();
+  document.getElementById('mm_go').disabled = true;
+  document.getElementById('mm_results').classList.add('hidden');
+  document.getElementById('mm_progress').classList.remove('hidden');
+  const body = {{script_text: document.getElementById('mm_script').value,
+               author: document.getElementById('mm_author').value,
+               ending: document.getElementById('mm_ending').value,
+               do_images: document.getElementById('mm_images').checked}};
+  const r = await fetch('/mm_create', {{method:'POST',
+    headers:{{'Content-Type':'application/json'}}, body: JSON.stringify(body)}});
+  const j = await r.json();
+  if (j.error) {{ document.getElementById('mm_stage').textContent = j.error;
+                 document.getElementById('mm_go').disabled = false; return; }}
+  mmPoll = setInterval(async () => {{
+    let sr;
+    try {{ sr = await fetch('/status/' + j.job_id); }} catch(e) {{ return; }}
+    if (sr.status === 404) {{ clearInterval(mmPoll);
+      document.getElementById('mm_stage').textContent = 'Job lost (server restarted) - please try again.';
+      document.getElementById('mm_go').disabled = false; return; }}
+    const st = await sr.json();
+    document.getElementById('mm_stage').textContent = st.stage || '';
+    document.getElementById('mm_fill').style.width = (st.progress || 0) + '%';
+    if (st.status === 'done' || st.status === 'error') {{
+      clearInterval(mmPoll);
+      document.getElementById('mm_go').disabled = false;
+      if (st.result) {{
+        let html = '';
+        (st.result.files || []).forEach(f => {{
+          html += '<a class="dl" href="/download/' + j.job_id + '/' + encodeURIComponent(f) + '">&#128506; ' + f + '</a>';
+        }});
+        document.getElementById('mm_downloads').innerHTML = html;
+        let w = '';
+        (st.warnings || []).forEach(x => {{ w += '<div class="warn">&#9888; ' + x + '</div>'; }});
+        document.getElementById('mm_warnings').innerHTML = w;
+        document.getElementById('mm_results').classList.remove('hidden');
+      }}
+    }}
+  }}, 1500);
+}});
+</script></div></body></html>"""
+
+
+@app.route("/mm_create", methods=["POST"])
+def mm_create():
+    d = request.get_json(force=True, silent=True) or {}
+    script_text = (d.get("script_text") or "").strip()
+    if len(script_text) < 500:
+        return jsonify({"error": "Paste the whole script first (at least 500 characters)."}), 400
+    author_key = (d.get("author") or "shinn").strip().lower()
+    if author_key not in pipeline.AUTHORS:
+        return jsonify({"error": "Unknown author."}), 400
+    params = {
+        "author": author_key,
+        "script_text": script_text,
+        "ending": d.get("ending") if d.get("ending") in ("none", "product", "funnel") else "none",
+        "do_images": bool(d.get("do_images", True)),
+    }
+    _role = _auth_role()
+    if _role not in ("admin", None):
+        _rec = _load_users().get(_role) or {}
+        if _rec.get("api_key"):
+            kc = _rec["api_key"]
+            if kc.startswith("named:"):
+                nk = pipeline.load_env().get("ANTHROPIC_API_KEY_" + kc[6:].upper())
+                if nk:
+                    params["custom_api_key"] = nk
+    _cleanup_output()
+    job_id = uuid.uuid4().hex[:12]
+    JOBS[job_id] = {"status": "running", "progress": 0, "warnings": [],
+                    "author_display": pipeline.AUTHORS[author_key]["display"],
+                    "stage": "Queued (mindmap only)..."}
+    t = threading.Thread(target=pipeline.run_pipeline_mm,
+                         args=(job_id, params, JOBS[job_id], OUTPUT_ROOT), daemon=True)
+    t.start()
+    return jsonify({"job_id": job_id})
 
 
 @app.route("/users", methods=["GET"])
