@@ -801,15 +801,19 @@ def _repeat_guard(key):
     if request.method == "HEAD" or request.headers.get("Range"):
         return None
     now = _t.time()
+    # once a loop trips, stay locked for 30 minutes - and answer 410 Gone,
+    # the one status retrying download managers treat as final
+    locked_until = _serve_log.get(("lock", key), 0)
     hits = [t for t in _serve_log.get(key, []) if now - t < 120]
-    if len(hits) >= 3:
+    if now < locked_until or len(hits) >= 3:
+        if len(hits) >= 3:
+            _serve_log[("lock", key)] = now + 1800
         _serve_log[key] = hits
         from flask import Response
-        return Response("This file was already downloaded several times just now. "
-                        "If a download keeps repeating, cancel it in your download "
-                        "manager - the file is safe in Stored videos.",
-                        status=429, mimetype="text/plain",
-                        headers={"Retry-After": "600"})
+        return Response("Download loop detected - this link is paused for 30 minutes. "
+                        "The file is safe in Stored videos. If this keeps happening, "
+                        "remove the item from your download manager's queue.",
+                        status=410, mimetype="text/plain")
     hits.append(now)
     _serve_log[key] = hits
     if len(_serve_log) > 200:
