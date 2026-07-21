@@ -624,6 +624,30 @@ On the free cloud server the storage is also cleared whenever the server restart
 {body}</div></body></html>"""
 
 
+# hard repeat-guard: if any client loops on the same file (broken download
+# manager retrying forever), refuse after 3 serves in 2 minutes
+_serve_log = {}
+
+
+def _repeat_guard(key):
+    import time as _t
+    now = _t.time()
+    hits = [t for t in _serve_log.get(key, []) if now - t < 120]
+    if len(hits) >= 3:
+        _serve_log[key] = hits
+        from flask import Response
+        return Response("This file was already downloaded several times just now. "
+                        "If a download keeps repeating, cancel it in your download "
+                        "manager - the file is safe in Stored videos.",
+                        status=429, mimetype="text/plain",
+                        headers={"Retry-After": "600"})
+    hits.append(now)
+    _serve_log[key] = hits
+    if len(_serve_log) > 200:
+        _serve_log.pop(next(iter(_serve_log)))
+    return None
+
+
 # short-lived cache + stable fingerprints so download managers can resume
 # archive downloads instead of restarting them forever
 _remote_cache = {}
@@ -645,6 +669,9 @@ def download_remote(job_id, filename):
     if "/" in filename or ".." in filename or "/" in job_id or ".." in job_id:
         abort(400)
     cache_key = f"{job_id}/{filename}"
+    blocked = _repeat_guard(cache_key)
+    if blocked is not None:
+        return blocked
     hit = _remote_cache.get(cache_key)
     if hit and time.time() - hit[0] < 900:
         return _serve_bytes(hit[1], filename)
@@ -670,6 +697,9 @@ def download(job_id, filename):
     # guard against traversal
     if "/" in filename or ".." in filename:
         abort(400)
+    blocked = _repeat_guard(f"{job_id}/{filename}")
+    if blocked is not None:
+        return blocked
     folder = os.path.join(OUTPUT_ROOT, job_id)
     if not os.path.isdir(folder) or not os.path.isfile(os.path.join(folder, filename)):
         # local copy gone (server restarted / disk wiped) - fall back to the
