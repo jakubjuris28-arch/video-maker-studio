@@ -162,56 +162,59 @@ def build_script_system(p):
     """Dispatch to the selected author's locked script format."""
     s = AUTHORS[p["author"]]["build_system"](p)
     n = p["num_keys"]
-    s += ("\n\nDECREES: every key CLOSES with one short first-person decree in the "
-          "author's own register (a spoken decree for the manifestation authors, a "
-          "quiet resolution line for Carl Jung) - introduce it naturally ('so speak "
-          "this decree with me...' or the author's equivalent), speak it once and "
-          "repeat it once, keep it under 15 words, and make it DISTINCT for every key.")
-    if p["num_keys"] >= 9 and p.get("target_chars", 40000) < 22000:
-        s += (f"\n\nSHORT TARGET NOTE: the total is small, so compress the key "
-              f"escalation proportionally - keys 1-3 are simply short, medium, "
-              f"longer. ALL {p['num_keys']} keys must still appear, each with its "
-              f"cue line, none merged or dropped.")
-    if p.get("affirmation_mode", "adjusted") != "none":
-        s += ("\n\nAFFIRMATION COUNT IS LOCKED: in its section the participation "
-              "affirmation is spoken EXACTLY TWICE - count them - and nowhere else "
-              "except the single final echo in the closing.")
-    if p.get("premise_mode", "auto") != "none":
-        s += ("\n\nPREMISE ORDER IS LOCKED: immediately after the title and the single "
-              "bridge sentence comes the PREMISE - read the quote or verse IN FULL and "
-              "speak its source OUT LOUD (the book and verse, or the author and the work "
-              "it comes from, e.g. 'Isaiah sixty-five, verse twenty-four' or 'as Jung "
-              "wrote in Aion'), before anything else. Only AFTER the premise comes the "
-              "participation affirmation (if this video has one), and only after that "
-              "the first key. Never open with a story, a long hook, or any key content "
-              "before the premise has been spoken with its source named.")
+    n = p["num_keys"]
     unit = p.get("unit_word") or "keys"
+    u1 = unit.rstrip("s")
+    contract = [
+        f"- exactly {n} {unit}, each opening 'the [ordinal] {u1} is...', each with its "
+        f"[IMAGE: MASTER KEY N ...] cue line immediately before it (cue lines stay "
+        f"exactly in that form, never spoken)",
+        f"- every {u1} closes with ONE short first-person decree in the author's own "
+        f"register (under 15 words, quotable, distinct per {u1}), spoken once with weight",
+        "- the recap begins with the exact words 'here is the whole picture'",
+        "- zero periods in the spoken text",
+    ]
+    if p.get("affirmation_mode", "adjusted") != "none":
+        contract.insert(0, "- the participation affirmation is spoken EXACTLY TWICE in "
+                           "its section ('say it with me', then 'again'), plus its single "
+                           "final echo in the closing - never more")
+    if p.get("premise_mode", "auto") != "none":
+        contract.insert(0, "- the PREMISE comes first (right after the title and one "
+                           "bridge sentence): quote it in full and SPEAK ITS SOURCE out "
+                           "loud, before the affirmation and before any " + u1)
     if unit != "keys":
-        u1 = unit.rstrip("s")
-        s += (f"\n\nUNIT NAME: in this video the numbered sections are called "
-              f"'{unit}', not 'keys' - every spoken 'the first key is' becomes "
-              f"'the first {u1} is' and so on, and the recap language matches. The "
-              f"[IMAGE: MASTER KEY N ...] cue lines stay EXACTLY as specified (they "
-              f"are never spoken).")
-    s += (f"\n\nFINAL SELF-CHECK before you finish - all three must hold or the "
-          f"script is rejected:\n"
-          f"1. EXACTLY {n} keys, each opening with its ordinal ('the first key is...' "
-          f"through the {n}th), never fewer, never merged.\n"
-          f"2. EXACTLY {n} cue lines of the form [IMAGE: MASTER KEY N ...], numbered "
-          f"1 to {n}, one immediately before each key.\n"
-          f"3. The recap begins with the exact words 'here is the whole picture', and "
-          f"the spoken text contains zero periods.")
-    if p.get("cta_none"):
-        s = re.sub(r"(?m)^5\. A SHORT comment call to action.*$",
-                   "5. No comment call to action in this video - never ask viewers "
-                   "to comment, type words, or engage.", s)
-    if p.get("affirmation_mode") == "none" and p["author"] not in ("custom", "auto"):
-        # remove the affirmation from a locked format (custom handles it natively)
-        s = re.sub(r"(?m)^4\. PARTICIPATION (AFFIRMATION|RESOLUTION).*$",
-                   "4. NO participation affirmation in this video - do not include "
-                   "one anywhere, and never say 'say it with me'.", s)
-        s = re.sub(r"(?m)^9\. The final (affirmation|resolution) once more.*$",
-                   "9. A short closing line tying back to the title.", s)
+        contract.append(f"- the numbered sections are called '{unit}' in speech, never 'keys'")
+    if p["num_keys"] >= 9 and p.get("target_chars", 40000) < 22000:
+        contract.append(f"- the total is short: compress the {u1} escalation "
+                        f"proportionally, but ALL {n} {unit} must appear")
+    s += ("\n\nFORMAT CONTRACT - check each before finishing, violations are rejected:\n"
+          + "\n".join(contract))
+
+    if p["author"] != "jung":
+        s += ("\n\nSCRIPT CRAFT (what separates the niche's best from the rest - serve "
+              "the format, never override it):\n"
+              "- the bridge sentence aims the title at the viewer's private life in one "
+              "clause - a recognition line, never a platitude\n"
+              "- in the premise, validate what the title promises, then reveal that the "
+              "viewer's assumed way of getting it is what blocks it - an open loop the "
+              "whole video pays into\n"
+              "- never close a key flat: its last line opens a door the next key walks "
+              "through - retention lives at the seams\n"
+              "- cash every abstraction into a concrete this-week behavior within two "
+              "sentences, one vivid everyday story or example per key, never recycled "
+              "across keys\n"
+              "- claim first in plain words, then the quote seals it - never open a "
+              "claim with the quote, and never invent quotes: if unsure, paraphrase "
+              "honestly ('she taught that...')\n"
+              "- 'it is not X, it is Y' reframes are the quotable spine - roughly one "
+              "per minute, and the recap restates the keys as a chain of these "
+              "aphorisms after its locked opening words\n"
+              "- rhythm for comma-prose: runs of three to five short clauses, then one "
+              "long rolling clause that breathes - vary it, never a metronome\n"
+              "- speak to 'you' in the present tense, warm and certain, the author's "
+              "voice carrying the whole way - the teaching is the star, the structure "
+              "is invisible")
+
     return s
 
 
@@ -874,6 +877,16 @@ KEY_CUE_RE = re.compile(r"\[IMAGE:\s*MASTER\s+KEY\s+(\d+)", re.I)
 RECAP_RE = re.compile(r"here(?:\u2019s|'s| is) the whole picture", re.I)
 
 
+def strip_preamble(script, title):
+    """Cut any model chatter before the title line - scripts must open with
+    the title verbatim."""
+    t = (title or "").strip()
+    if not t:
+        return script
+    i = script.find(t)
+    return script[i:] if i > 0 else script
+
+
 def spoken_len(text):
     return len(re.sub(r"\[[^\]]*\]", "", text).strip())
 
@@ -1096,7 +1109,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
             user_msg += vc + "\n"
         user_msg += "\nWrite the full sleep journey script now, following the locked format exactly."
         max_tokens = min(int(target / 2.6), 32000)
-        script = call_anthropic(cfg, model, system, user_msg, max_tokens)
+        script = strip_preamble(call_anthropic(cfg, model, system, user_msg, max_tokens), title)
 
         # scene-count guard (one repair attempt)
         cues = len(SCENE_CUE_RE.findall(script))
@@ -1111,6 +1124,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
                      f"everything else identical, and return ONLY the corrected script.\n\n"
                      f"SCRIPT:\n{script}"),
                     min(int(len(script) / 2.6) + 3000, 32000))
+                fixed = strip_preamble(fixed, title)
                 if abs(len(SCENE_CUE_RE.findall(fixed)) - p["n_scenes"]) <= 1 \
                         and spoken_len(fixed) > 0.8 * spoken_len(script):
                     script = fixed
@@ -1137,6 +1151,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
             except Exception as e:
                 job["warnings"].append(f"Deepen pass {tries} failed: {e}")
                 break
+            longer = strip_preamble(longer, title)
             ns = compute_stats(longer)
             if ns["spoken_chars"] > stats["spoken_chars"] + 300 \
                     and abs(len(SCENE_CUE_RE.findall(longer)) - p["n_scenes"]) <= 1:
@@ -1153,6 +1168,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
                      f"never removing whole movements or declarations. Keep all [SCENE N ...] "
                      f"cues. Return ONLY the condensed script.\n\nSCRIPT:\n{script}"),
                     max_tokens)
+                shorter = strip_preamble(shorter, title)
                 cs = compute_stats(shorter)
                 if 0.85 * target <= cs["spoken_chars"] < stats["spoken_chars"]:
                     script, stats = shorter, cs
@@ -1454,7 +1470,7 @@ def run_pipeline(job_id, p, job, output_root):
         target = p["target_chars"]
         # generous token headroom (~4 chars/token) so length is never capped
         max_tokens = min(int(target / 2.6), 32000)
-        script = call_anthropic(cfg, model, system, build_script_user(p), max_tokens)
+        script = strip_preamble(call_anthropic(cfg, model, system, build_script_user(p), max_tokens), title)
 
         # format guard: the script must have exactly num_keys keys (each with
         # its cue line) and the locked recap opener. Repair can SPLIT oversized
@@ -1488,6 +1504,7 @@ def run_pipeline(job_id, p, job, output_root):
                          f"- Commas only, no periods, and change nothing else.\n"
                          f"Return ONLY the corrected script.\n\nSCRIPT:\n{script}"),
                         min(int(len(script) / 2.6) + 3000, 32000))
+                    fixed = strip_preamble(fixed, title)
                     if (_format_ok(fixed)
                             and spoken_len(fixed) > 0.8 * spoken_len(script)):
                         script = fixed
@@ -1509,6 +1526,7 @@ def run_pipeline(job_id, p, job, output_root):
                         f"with its own [IMAGE: MASTER KEY N ...] cue line, numbered 1 to "
                         f"{p['num_keys']}.",
                         max_tokens)
+                    script = strip_preamble(script, title)
                 except Exception as e:
                     job["warnings"].append(f"Regeneration failed: {e}")
                     break
@@ -1600,6 +1618,7 @@ def run_pipeline(job_id, p, job, output_root):
             except Exception as e:
                 job["warnings"].append(f"Expand pass {tries} failed: {e}")
                 break
+            longer = strip_preamble(longer, title)
             new_stats = compute_stats(longer)
             # keep it only if it actually grew meaningfully
             if new_stats["spoken_chars"] > stats["spoken_chars"] + 300:
@@ -1671,6 +1690,7 @@ def run_pipeline(job_id, p, job, output_root):
                      f"and no periods, the same affirmation and ending block.\n\n"
                      f"Return ONLY the complete condensed script.\n\nCURRENT SCRIPT:\n{script}"),
                     min(int(target / 2.6), 32000))
+                condensed = strip_preamble(condensed, title)
                 cstats = compute_stats(condensed)
                 if (0.85 * target <= cstats["spoken_chars"] < stats["spoken_chars"]
                         and cstats["image_cues"] == p["num_keys"]):
