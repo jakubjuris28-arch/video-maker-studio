@@ -35,7 +35,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words, quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh three-part affirmation that ALWAYS ends with "my word is my wand". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -130,7 +130,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Neville read it, quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part assumption that ALWAYS ends with "imagination creates my reality". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -228,7 +228,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Murphy read it (as a law of mind), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part decree that ALWAYS ends with "my subconscious brings it to pass". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -325,7 +325,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state a universal principle of Life the way Louise taught it, quote it in her plain warm words, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part affirmation that ALWAYS ends with "all is well in my world". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -423,7 +423,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state one of Hill's principles as a law of success, quote it in his words, one connecting line that lands with weight. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Hill's register that ALWAYS ends with "what I conceive and believe, I achieve". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -523,7 +523,7 @@ STRUCTURE, in this exact order
 3. PREMISE, fast (about 40 seconds max) but meaningful: state the Bible verse in words the way Fox read it (as spiritual law), quote it, one connecting line that lands emotionally. Do NOT teach at length here.
 4. PARTICIPATION AFFIRMATION, quick: a fresh first-person, present-tense three-part declaration in Fox's register that ALWAYS ends with "I think of God instead". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final affirmation once more, then a short closing line tying back to the title.
@@ -696,7 +696,7 @@ APPROVED PREMISE QUOTES (all verified to primary sources - pick ONE that fits th
 FAKE QUOTES - NEVER use these, they are misattributed and this audience will call it out: 'Until you make the unconscious conscious, it will direct your life and you will call it fate' (modern paraphrase - use the real Aion line above) | 'You are what you do, not what you say you'll do' | 'I am not what happened to me, I am what I choose to become' | 'The privilege of a lifetime is to become who you truly are' (that is Joseph Campbell) | 'You meet your destiny on the road you take to avoid it' (La Fontaine) | 'What you resist, persists' | 'those who were seen dancing were thought to be insane by those who could not hear the music' (not Nietzsche) | 'To live is to suffer, to survive is to find some meaning in the suffering' (not Nietzsche) | 'Whatever you can do, or dream you can, begin it' (not Goethe) | 'Watch your thoughts, they become words' (not Lao Tzu) | 'Nature does not hurry, yet everything is accomplished' (not a real Lao Tzu quote).
 4. PARTICIPATION RESOLUTION, quick: a fresh first-person, present-tense three-part reflective resolution that ALWAYS ends with "I make the unconscious conscious". Speak the affirmation EXACTLY TWICE in total, never more, never less: say "say it with me" and speak it in full, then say "again" and speak it in full a second time, then move on immediately - no third repetition, no partial echoes of it inside this section. Land this within the first 60 to 70 seconds.
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...".
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...".
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 9. The final resolution once more, then a short closing line tying back to the title, ideally a held question.
@@ -798,7 +798,7 @@ STRUCTURE, in this exact order
 {premise_rule}
 {affirmation_rule}
 5. A SHORT comment call to action telling viewers to type the TWO words "{p['cta']}" in the comments.
-6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Key 1 is about 2 minutes (a short punchy hook), Key 2 about 3 minutes, Key 3 about 4 minutes, and the remaining keys have NO fixed length - make each as long and full as it needs to be so the whole script reaches the target. Each key opens with "the {{ordinal}} key is...". Derive the keys from THIS title's specific promise - each key teaches a DISTINCT idea of the theme, with concrete everyday examples.
+6. THE KEYS with ESCALATING LENGTH. There are exactly {num} keys ({num_word}). Their lengths follow the LENGTH MAP given at the end of this prompt EXACTLY - a deliberate dramatic shape, never uniform, never random. Each key opens with "the {{ordinal}} key is...". Derive the keys from THIS title's specific promise - each key teaches a DISTINCT idea of the theme, with concrete everyday examples.
 7. A brief recap beginning "here is the whole picture...".
 8. The ending block. {ending_rule}
 {closing_rule}

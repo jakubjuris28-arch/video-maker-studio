@@ -172,7 +172,12 @@ def build_script_system(p):
         f"- every {u1} closes with ONE short first-person decree in the author's own "
         f"register (under 15 words, quotable, distinct per {u1}), spoken once with weight",
         "- the recap begins with the exact words 'here is the whole picture'",
-        "- zero periods in the spoken text",
+        "- the script ends COMPLETE: recap, then the full ending block (the product "
+        "pitch with price and 'link in the description' when the ending is product), "
+        "then the final affirmation echo and the closing line - never stop mid-thought",
+        "- zero periods in the spoken text, and NEVER write or speak the name of "
+        "any punctuation mark ('comma', 'period', 'pause') - punctuation is typed, "
+        "not narrated, and none of these instructions ever appear in the script",
     ]
     if p.get("affirmation_mode", "adjusted") != "none":
         contract.insert(0, "- the participation affirmation is spoken EXACTLY TWICE in "
@@ -214,6 +219,45 @@ def build_script_system(p):
               "- speak to 'you' in the present tense, warm and certain, the author's "
               "voice carrying the whole way - the teaching is the star, the structure "
               "is invisible")
+
+    # moves learned from the user's gold-standard exemplar - ALL authors
+    s += ("\n\nEXEMPLAR MOVES (these are what make a script feel handmade):\n"
+          "- the premise is ARGUED, not recited: after quoting it with its source, "
+          "turn it immediately into proof of the mechanism ('and [the author] would "
+          "stop you right there and say, do you see it...')\n"
+          "- the title's hook phrase is a MOTIF: speak it VERBATIM at least three "
+          "times spread across the keys, echo it in the comment CTA words when "
+          "fitting, and let it turn the final line\n"
+          "- tie the comment CTA to a felt moment ('if something in you just went "
+          "quiet... type two words... let it be your seal'), never a bare ask\n"
+          "- somewhere early, name the viewer's private defeat gently and tell them "
+          "they are not the only one - validation before teaching\n"
+          "- include ONE ordinary-day walkthrough somewhere in the middle keys (an "
+          "hour-by-hour tally that makes the mechanism undeniable) and ONE inline "
+          "exercise ('pause for a moment and pick one real...')\n"
+          "- the deepest key may unfold in spoken pieces ('first, consider... "
+          "second, consider...'), each turning the same key further\n"
+          "- the recap UNIFIES: after its locked opening words, reveal the keys were "
+          "never separate - they were turns of a single key, name that one "
+          "recognition\n"
+          "- close with mercy and wonder: the listener's past reframed kindly, a "
+          "callback or two, the title phrase returning gently at the very end")
+
+    budgets = key_budgets(p.get("target_chars", 40000), p["num_keys"])
+    roles = KEY_ROLES_9 if p["num_keys"] >= 9 else KEY_ROLES_6
+    map_lines = [f"  {u1} {i+1}: about {round(b/850, 1)} minutes (~{b} characters) - {roles[i] if i < len(roles) else 'steady'}"
+                 for i, b in enumerate(budgets)]
+    s += ("\n\nLENGTH MAP - the locked dramatic shape, follow it closely (the whole "
+          "video scales with the target, the SHAPE never changes):\n" + "\n".join(map_lines))
+
+    if p.get("ending") == "product":
+        s += ("\n\nPRODUCT PLACEMENT: mention the product TWICE - one soft, brief "
+              "pause after roughly the third " + (p.get("unit_word") or "keys").rstrip("s")
+              + " (two or three sentences, ending 'now let us continue'), and the full "
+              "warm pitch near the close with price, refund and 'link in the "
+              "description' - never more than these two mentions")
+
+
 
     return s
 
@@ -709,9 +753,8 @@ def build_xmind(path, title, num_keys, ending, meta, images,
         k = keys[i] if i < len(keys) else {}
         ktitle = k.get("title", f"{i+1}, Key {i+1}")
         body_text = _lines(k.get("body", []))
-        _decree = str(k.get("decree", "") or "").strip().strip("'\"")
-        if _decree:
-            body_text += f"\n\n'{_decree}'"
+        # decrees are spoken in the script but NOT shown in the mindmap body -
+        # locked to the user's exemplar map (clean 4-line bodies)
         if i in sha_by_index:
             child = _topic(body_text, image=_img(sha_by_index[i]),
                           custom_width=490, folded=True)
@@ -856,35 +899,63 @@ def compute_stats(script):
 
 
 def key_budgets(target_chars, num_keys):
-    """Keys 1-3 have locked sizes (2, 3, 4 minutes at ~850 chars/min).
-    Keys 4+ have no per-key rule - they share the rest of the target evenly,
-    purely as an expansion floor so the TOTAL lands on target_chars."""
-    fixed = [1700, 2550, 3400][:min(3, num_keys)]
-    # short targets can't fit the full 2/3/4-minute escalation - scale it down
-    # proportionally so all keys still exist (real runs at 25k+ are untouched)
-    if target_chars < 25000:
-        scale = max(0.25, (target_chars - 3500) / 21500)
-        fixed = [int(f * scale) for f in fixed]
-    rest = num_keys - len(fixed)
-    if rest <= 0:
-        return fixed[:num_keys]
+    """The locked audio-drama LENGTH SHAPE (user-specified), scaled
+    proportionally to the target. Minutes archetype:
+      9 keys: 2.4 3.2 3.0 | 6.7 2.0 4.4 | 8.6 PEAK | 4.2 2.4
+      6 keys: 2.4 | 2.8 3.6 2.5 | 6.0 PEAK | 2.4
+    Key 1 is always the smallest opener; the PEAK is always the longest."""
+    shape9 = [2.4, 3.2, 3.0, 6.7, 2.0, 4.4, 8.6, 4.2, 2.4]
+    shape6 = [2.4, 2.8, 3.6, 2.5, 6.0, 2.4]
+    shape = shape9 if num_keys >= 9 else shape6
+    shape = shape[:num_keys] + [3.0] * max(0, num_keys - len(shape))
     overhead = 3500  # premise + affirmation + recap + ending block
-    pool = max(target_chars - overhead - sum(fixed), rest * 800)
-    return fixed + [int(pool / rest)] * rest
+    pool = max(target_chars - overhead, num_keys * 500)
+    total = sum(shape)
+    return [int(pool * r / total) for r in shape]
 
+
+KEY_ROLES_9 = ["the quick win - fastest key, instant reframe",
+               "brisk ramp", "brisk ramp, keep pace",
+               "the first long dive", "short and punchy - a jab",
+               "medium - rebuild the build",
+               "THE PEAK - the longest, heaviest, deepest teaching of the whole "
+               "video, unfold it in spoken pieces (first... second... third...)",
+               "coming down - steady", "short warm end beat"]
+KEY_ROLES_6 = ["the quick win - fastest key, instant reframe",
+               "snappy", "the long one of the middle", "medium-short",
+               "THE PEAK - the longest, heaviest, deepest teaching of the whole "
+               "video, unfold it in spoken pieces (first... second... third...)",
+               "short warm end beat"]
 
 KEY_CUE_RE = re.compile(r"\[IMAGE:\s*MASTER\s+KEY\s+(\d+)", re.I)
 RECAP_RE = re.compile(r"here(?:\u2019s|'s| is) the whole picture", re.I)
 
 
 def strip_preamble(script, title):
-    """Cut any model chatter before the title line - scripts must open with
-    the title verbatim."""
+    """Sanitize a returned script: cut chatter before the title, force the
+    first line to be the exact title, and scrub instruction-echo artifacts
+    (models occasionally write the WORD 'comma' or restate the punctuation
+    rules inside the text)."""
     t = (title or "").strip()
-    if not t:
-        return script
-    i = script.find(t)
-    return script[i:] if i > 0 else script
+    if t:
+        i = script.find(t)
+        if i > 0:
+            script = script[i:]
+        # first spoken line must be the exact title, nothing appended to it
+        lines = script.split("\n")
+        for li, line in enumerate(lines):
+            if line.strip():
+                if t in line and line.strip() != t:
+                    lines[li] = t
+                break
+        script = "\n".join(lines)
+    # scrub spoken punctuation-names and echoed format rules
+    script = re.sub(r",?\s*\bcomma only\b[^,\n]*(?:no periods[^,\n]*)?(?:one continuous flow)?", "", script, flags=re.I)
+    script = re.sub(r"\s*,?\s*\bcomma\b(?=[\s,\n]|$)", ",", script, flags=re.I)
+    script = re.sub(r"\s*,?\s*\bno periods\b[^,\n]*", "", script, flags=re.I)
+    script = re.sub(r",\s*,+", ",", script)
+    script = re.sub(r",[ \t]*\n", ",\n", script)
+    return script
 
 
 def spoken_len(text):
@@ -1108,7 +1179,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
         if vc:
             user_msg += vc + "\n"
         user_msg += "\nWrite the full sleep journey script now, following the locked format exactly."
-        max_tokens = min(int(target / 2.6), 32000)
+        max_tokens = min(int(target / 2.2) + 2000, 32000)
         script = strip_preamble(call_anthropic(cfg, model, system, user_msg, max_tokens), title)
 
         # scene-count guard (one repair attempt)
@@ -1468,9 +1539,21 @@ def run_pipeline(job_id, p, job, output_root):
         job.update(stage=f"Writing the script with the Anthropic API ({author['display']})...", progress=8)
         system = build_script_system(p)
         target = p["target_chars"]
-        # generous token headroom (~4 chars/token) so length is never capped
-        max_tokens = min(int(target / 2.6), 32000)
-        script = strip_preamble(call_anthropic(cfg, model, system, build_script_user(p), max_tokens), title)
+        # generous token headroom so the ending block is never truncated
+        max_tokens = min(int(target / 2.2) + 2000, 32000)
+        try:
+            script = strip_preamble(call_anthropic(cfg, model, system,
+                                                   build_script_user(p), max_tokens,
+                                                   strict=True), title)
+        except RuntimeError as e:
+            if "truncated" not in str(e):
+                raise
+            job.update(stage="Script hit the length ceiling - retrying with more room...",
+                       progress=10)
+            script = strip_preamble(call_anthropic(cfg, model, system,
+                                                   build_script_user(p),
+                                                   min(int(target / 1.8) + 3000, 32000)),
+                                    title)
 
         # format guard: the script must have exactly num_keys keys (each with
         # its cue line) and the locked recap opener. Repair can SPLIT oversized
@@ -1547,15 +1630,13 @@ def run_pipeline(job_id, p, job, output_root):
             if parts:
                 head, sections, tail = parts
                 budgets = key_budgets(target, p["num_keys"])
-                n_fixed = min(3, p["num_keys"])  # keys with a locked minute size
-
                 def _expand_one(i, base_script):
                     """Rewrite key i+1 alone; returns (i, new_section | None)."""
                     try:
                         bigger = call_anthropic(
                             cfg, model, system,
                             build_expand_key_user(p, base_script, i + 1, sections[i],
-                                                  budgets[i], exact=i < n_fixed),
+                                                  budgets[i], exact=True),
                             min(int(budgets[i] / 2.2) + 1000, 9000)).strip()
                     except Exception as e:
                         job["warnings"].append(f"Key {i+1} expand failed: {e}")
@@ -1569,20 +1650,10 @@ def run_pipeline(job_id, p, job, output_root):
                     return i, None
 
                 for round_no in range(2):
-                    # keys 1-3: always fill their locked sizes
-                    todo = [i for i in range(n_fixed)
-                            if spoken_len(sections[i]) < 0.9 * budgets[i]]
-                    # keys 4+: shortest first, only enough to reach the total
+                    # the SHAPE is locked: every key is brought toward its budget
                     base = head + "".join(sections) + tail
-                    shortfall = (target - compute_stats(base)["spoken_chars"]
-                                 - sum(budgets[i] - spoken_len(sections[i]) for i in todo))
-                    for i in sorted(range(n_fixed, p["num_keys"]),
-                                    key=lambda k: spoken_len(sections[k])):
-                        if shortfall <= 0:
-                            break
-                        if spoken_len(sections[i]) < 0.9 * budgets[i]:
-                            todo.append(i)
-                            shortfall -= budgets[i] - spoken_len(sections[i])
+                    todo = [i for i in range(p["num_keys"])
+                            if spoken_len(sections[i]) < 0.85 * budgets[i]]
                     if not todo:
                         break
                     job.update(
