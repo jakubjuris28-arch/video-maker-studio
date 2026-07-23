@@ -365,7 +365,7 @@ function showResults(jobId, j){
 }
 async function copyScript(url, el){
   try {
-    const r = await fetch(url);
+    const r = await fetch(url, {headers: {'X-Copy-Request': '1'}});
     if (!r.ok) { el.textContent = 'Could not load the script (' + r.status + ')'; return; }
     const t = await r.text();
     try { await navigator.clipboard.writeText(t); }
@@ -925,7 +925,7 @@ document.addEventListener('click', ev => {{
 }});
 async function copyScript(url, el) {{
   try {{
-    const r = await fetch(url);
+    const r = await fetch(url, {{headers: {{'X-Copy-Request': '1'}}}});
     if (!r.ok) {{ el.textContent = 'Could not load the script (' + r.status + ')'; return; }}
     const t = await r.text();
     try {{ await navigator.clipboard.writeText(t); }}
@@ -946,8 +946,9 @@ _serve_log = {}
 
 def _repeat_guard(key):
     import time as _t
-    # probes and resume-chunks are part of ONE download - never count or block them
-    if request.method == "HEAD" or request.headers.get("Range"):
+    # probes, resume-chunks and clipboard-copy fetches are never counted or blocked
+    if request.method == "HEAD" or request.headers.get("Range") \
+            or request.headers.get("X-Copy-Request"):
         return None
     now = _t.time()
     # once a loop trips, stay locked for 30 minutes - and answer 410 Gone,
