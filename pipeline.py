@@ -647,13 +647,13 @@ def generate_image(prompt, cfg):
 # XMind builder
 # --------------------------------------------------------------------------
 # The exact dark theme lifted from the reference .xmind (black bg, grey topics,
-# Helvetica 18pt, central=rect, main/sub=underline, elbow connectors). This is
+# Arial 18pt (cross-platform; Helvetica is Mac-only and breaks on Windows), central=rect, main/sub=underline, elbow connectors). This is
 # the LOCKED look — do not change without a new reference file.
 XMIND_THEME = {
     "map": {"id": "8a27b25b-d1f5-4242-8812-d1eb47fbbc6b", "properties": {"svg:fill": "#080808ff", "color-list": "#eeeeeeff #080808ff"}},
-    "centralTopic": {"id": "69dca817-d6f4-4e10-9c83-3e306b85931a", "properties": {"fo:font-family": "Helvetica", "fo:font-size": "18pt", "fo:color": "inherited", "fo:text-align": "center", "svg:fill": "#555555ff", "fill-pattern": "none", "line-color": "#eeeeeeff", "border-line-color": "inherited", "border-line-width": "1pt", "shape-class": "org.xmind.topicShape.rect", "line-class": "org.xmind.branchConnection.roundedElbow"}},
-    "mainTopic": {"id": "ce5cd480-71e3-4991-8447-eba1bde0a5a4", "properties": {"fo:font-family": "Helvetica", "fo:font-size": "18pt", "fo:color": "inherited", "fo:text-align": "left", "svg:fill": "#3c3c3c", "fill-pattern": "none", "line-color": "inherited", "border-line-color": "inherited", "shape-class": "org.xmind.topicShape.underline", "line-class": "org.xmind.branchConnection.elbow"}},
-    "subTopic": {"id": "38c686ba-0c10-4b71-b691-aee48af8f983", "properties": {"fo:font-family": "Helvetica", "fo:font-size": "18", "fo:color": "inherited", "fo:text-align": "left", "svg:fill": "#3c3c3c", "fill-pattern": "none", "line-color": "inherited", "border-line-color": "inherited", "shape-class": "org.xmind.topicShape.underline"}},
+    "centralTopic": {"id": "69dca817-d6f4-4e10-9c83-3e306b85931a", "properties": {"fo:font-family": "Arial", "fo:font-size": "18pt", "fo:color": "inherited", "fo:text-align": "center", "svg:fill": "#555555ff", "fill-pattern": "none", "line-color": "#eeeeeeff", "border-line-color": "inherited", "border-line-width": "1pt", "shape-class": "org.xmind.topicShape.rect", "line-class": "org.xmind.branchConnection.roundedElbow"}},
+    "mainTopic": {"id": "ce5cd480-71e3-4991-8447-eba1bde0a5a4", "properties": {"fo:font-family": "Arial", "fo:font-size": "18pt", "fo:color": "inherited", "fo:text-align": "left", "svg:fill": "#3c3c3c", "fill-pattern": "none", "line-color": "inherited", "border-line-color": "inherited", "shape-class": "org.xmind.topicShape.underline", "line-class": "org.xmind.branchConnection.elbow"}},
+    "subTopic": {"id": "38c686ba-0c10-4b71-b691-aee48af8f983", "properties": {"fo:font-family": "Arial", "fo:font-size": "18", "fo:color": "inherited", "fo:text-align": "left", "svg:fill": "#3c3c3c", "fill-pattern": "none", "line-color": "inherited", "border-line-color": "inherited", "shape-class": "org.xmind.topicShape.underline"}},
     "floatingTopic": {"id": "f68087b8-3e96-447b-94d2-6b764d40f1c5", "properties": {"fo:color": "inherited", "svg:fill": "#3c3c3c", "line-color": "inherited", "border-line-color": "#eeeeeeff"}},
     "summaryTopic": {"id": "1759a632-2960-4eb7-9653-3fe373e6ef0b", "properties": {"fo:color": "inherited", "svg:fill": "#6f6f6fff", "line-color": "inherited", "border-line-color": "#6f6f6fff"}},
     "calloutTopic": {"id": "d7711de5-f709-42c2-bab4-3276a22b29e0", "properties": {"fo:color": "inherited", "svg:fill": "#6f6f6fff", "line-color": "inherited", "border-line-color": "#6f6f6fff"}},
