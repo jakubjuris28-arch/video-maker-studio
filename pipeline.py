@@ -248,7 +248,8 @@ def build_script_system(p):
     map_lines = [f"  {u1} {i+1}: about {round(b/850, 1)} minutes (~{b} characters) - {roles[i] if i < len(roles) else 'steady'}"
                  for i, b in enumerate(budgets)]
     s += ("\n\nLENGTH MAP - the locked dramatic shape, follow it closely (the whole "
-          "video scales with the target, the SHAPE never changes):\n" + "\n".join(map_lines))
+          "video scales with the target, the SHAPE never changes):\n" + "\n".join(map_lines)
+          + "\n  These add up to the target - hit each number and the total lands exactly.")
 
     if p.get("ending") == "product":
         s += ("\n\nPRODUCT PLACEMENT: mention the product TWICE - one soft, brief "
@@ -1205,7 +1206,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
 
         # length: expand up to 2 passes, then one condense if far over
         tries = 0
-        while stats["spoken_chars"] < 0.92 * target and tries < 2:
+        while stats["spoken_chars"] < 0.96 * target and tries < 2:
             tries += 1
             job.update(stage=f"Journey is {stats['spoken_chars']}/{target} chars, "
                              f"deepening (pass {tries})...", progress=14 + tries * 6)
@@ -1229,7 +1230,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
                 script, stats = longer, ns
             else:
                 break
-        if stats["spoken_chars"] > 1.15 * target:
+        if stats["spoken_chars"] > 1.05 * target:
             job.update(stage="Journey over target - condensing...", progress=28)
             try:
                 shorter = call_anthropic(
@@ -1241,7 +1242,7 @@ def run_pipeline_sleep(job_id, p, job, output_root):
                     max_tokens)
                 shorter = strip_preamble(shorter, title)
                 cs = compute_stats(shorter)
-                if 0.85 * target <= cs["spoken_chars"] < stats["spoken_chars"]:
+                if 0.95 * target <= cs["spoken_chars"] < stats["spoken_chars"]:
                     script, stats = shorter, cs
             except Exception as e:
                 job["warnings"].append(f"Condense failed: {e}")
@@ -1625,7 +1626,7 @@ def run_pipeline(job_id, p, job, output_root):
         # the TOTAL to land on target. The rewrites are independent (each call
         # replaces only its own key with the identical prompt as before), so
         # they run IN PARALLEL for speed.
-        if stats["spoken_chars"] < 0.92 * target:
+        if stats["spoken_chars"] < 0.96 * target:
             parts = split_key_sections(script, p["num_keys"])
             if parts:
                 head, sections, tail = parts
@@ -1673,7 +1674,7 @@ def run_pipeline(job_id, p, job, output_root):
 
         # legacy whole-script expansion as a final nudge if still short
         tries = 0
-        while stats["spoken_chars"] < 0.92 * target and tries < 2:
+        while stats["spoken_chars"] < 0.96 * target and tries < 2:
             tries += 1
             job.update(
                 stage=(f"Script is {stats['spoken_chars']}/{target} chars, "
@@ -1700,7 +1701,7 @@ def run_pipeline(job_id, p, job, output_root):
         # symmetric trim: if the model OVERSHOT the requested length, condense
         # every over-budget key IN PARALLEL, up to two rounds, until the total
         # lands close to the target; whole-script rewrite as a last resort
-        if stats["spoken_chars"] > 1.12 * target:
+        if stats["spoken_chars"] > 1.04 * target:
             parts = split_key_sections(script, p["num_keys"])
             if parts:
                 head, sections, tail = parts
@@ -1725,7 +1726,7 @@ def run_pipeline(job_id, p, job, output_root):
                 for round_no in range(2):
                     base = head + "".join(sections) + tail
                     total_now = compute_stats(base)["spoken_chars"]
-                    if total_now <= 1.08 * target:
+                    if total_now <= 1.02 * target:
                         break
                     todo = sorted(
                         (i for i in range(p["num_keys"])
@@ -1746,14 +1747,14 @@ def run_pipeline(job_id, p, job, output_root):
 
         # last resort for a still-oversized script (or when splitting failed):
         # one whole-script condense pass
-        if stats["spoken_chars"] > 1.12 * target:
+        if stats["spoken_chars"] > 1.04 * target:
             job.update(stage=f"Still {stats['spoken_chars']}/{target} chars - full condense pass...",
                        progress=32)
             try:
                 condensed = call_anthropic(
                     cfg, model, system,
                     (f"This script is {stats['spoken_chars']} characters of spoken text but it "
-                     f"must be about {target} (within five percent). Rewrite it SHORTER to that "
+                     f"must be {target} (within two percent). Rewrite it SHORTER to that "
                      f"length: cut repetition and filler, never a whole teaching point.\n\n"
                      f"KEEP EVERYTHING STRUCTURAL IDENTICAL: the title as the first spoken line, "
                      f"every section in the same order, all {p['num_keys']} keys each with its "
@@ -1763,7 +1764,7 @@ def run_pipeline(job_id, p, job, output_root):
                     min(int(target / 2.6), 32000))
                 condensed = strip_preamble(condensed, title)
                 cstats = compute_stats(condensed)
-                if (0.85 * target <= cstats["spoken_chars"] < stats["spoken_chars"]
+                if (0.95 * target <= cstats["spoken_chars"] < stats["spoken_chars"]
                         and cstats["image_cues"] == p["num_keys"]):
                     script, stats = condensed, cstats
                 else:
@@ -1773,12 +1774,12 @@ def run_pipeline(job_id, p, job, output_root):
             except Exception as e:
                 job["warnings"].append(f"Full condense pass failed: {e}")
 
-        if stats["spoken_chars"] > 1.15 * target:
+        if stats["spoken_chars"] > 1.05 * target:
             job["warnings"].append(
                 f"Script is {stats['spoken_chars']} chars vs target {target} - still over "
                 f"after condensing. The extra length is teaching content, not filler.")
 
-        if stats["spoken_chars"] < 0.85 * target:
+        if stats["spoken_chars"] < 0.95 * target:
             job["warnings"].append(
                 f"Script reached {stats['spoken_chars']} chars vs target {target} "
                 f"(~{stats['minutes']} min). The model would not go longer; "
