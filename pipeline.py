@@ -53,7 +53,7 @@ def load_env(path=None):
                  "KEYAI_MODEL", "KEYAI_SIZE", "KEYAI_ASPECT", "KEYAI_OUTPUT_FORMAT",
                  "GITHUB_TOKEN", "STORAGE_REPO") \
                 or k.startswith("PRODUCT_NAME") or k.startswith("FUNNEL_CHANNEL") \
-                or k.startswith("ANTHROPIC_API_KEY_"):
+                or k.startswith("ANTHROPIC_API_KEY_") or k.startswith("KEYAI_API_KEY_"):
             cfg[k] = v
     return cfg
 
@@ -1139,6 +1139,8 @@ def run_pipeline_sleep(job_id, p, job, output_root):
         cfg = load_env()
         if p.get("custom_api_key"):
             cfg["ANTHROPIC_API_KEY"] = p["custom_api_key"]
+        if p.get("image_api_key"):
+            cfg["KEYAI_API_KEY"] = p["image_api_key"]
         author = AUTHORS[p.get("author") or "shinn"]
         p["author"] = p.get("author") or "shinn"
         p["author_display"] = author["display"]
@@ -1344,6 +1346,8 @@ def run_pipeline_mm(job_id, p, job, output_root):
         cfg = load_env()
         if p.get("custom_api_key"):
             cfg["ANTHROPIC_API_KEY"] = p["custom_api_key"]
+        if p.get("image_api_key"):
+            cfg["KEYAI_API_KEY"] = p["image_api_key"]
         author = AUTHORS[p.get("author") or "shinn"]
         p["author"] = p.get("author") or "shinn"
         p["author_display"] = author["display"]
@@ -1503,6 +1507,8 @@ def run_pipeline(job_id, p, job, output_root):
             # the visitor's own key pays for this job; used in memory only,
             # never written to disk or logs
             cfg["ANTHROPIC_API_KEY"] = p["custom_api_key"]
+        if p.get("image_api_key"):
+            cfg["KEYAI_API_KEY"] = p["image_api_key"]
         author = AUTHORS[p.get("author") or "shinn"]
         p["author"] = p.get("author") or "shinn"
         p["author_display"] = author["display"]

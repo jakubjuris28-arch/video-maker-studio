@@ -157,6 +157,11 @@ PAGE = """<!doctype html>
     <input type="text" name="custom_api_key" id="custom_api_key" placeholder="sk-ant-..."
            style="display:none; margin-top:8px" autocomplete="off">
 
+    <label>Image API key <span class="hint">(whose KeyAI balance pays for the images)</span></label>
+    <select name="img_key_choice" id="img_key_choice">__IMG_KEY_OPTIONS__</select>
+    <input type="text" name="custom_img_key" id="custom_img_key" placeholder="your KeyAI key"
+           style="display:none; margin-top:8px" autocomplete="off">
+
     <label>Model override <span class="hint">(optional; blank = .env default)</span></label>
     <input type="text" name="model_override" placeholder="claude-sonnet-5">
 
@@ -251,7 +256,7 @@ syncVideoType();
 // remember every setting exactly as the user left it (survives back/reload)
 const FIELDS = ['video_type','author','custom_focus','title','target_chars','num_keys','unit_word','ending',
                 'cta_choice','cta','premise_choice','scripture','affirmation_choice',
-                'extra','api_key_choice','model_override','do_images','add_subscribe'];
+                'extra','api_key_choice','img_key_choice','model_override','do_images','add_subscribe'];
 function saveForm(){
   const st = {};
   FIELDS.forEach(n => { const el = form[n]; if (!el) return;
@@ -272,6 +277,8 @@ function restoreForm(){
       form.cta_choice.value === 'own' ? 'block' : 'none';
   document.getElementById('custom_api_key').style.display =
       form.api_key_choice.value === 'custom' ? 'block' : 'none';
+  document.getElementById('custom_img_key').style.display =
+      form.img_key_choice.value === 'custom' ? 'block' : 'none';
 }
 form.addEventListener('input', saveForm);
 form.addEventListener('change', saveForm);
@@ -283,6 +290,11 @@ const keyChoice = document.getElementById('api_key_choice');
 const customKey = document.getElementById('custom_api_key');
 keyChoice.addEventListener('change', () => {
   customKey.style.display = keyChoice.value === 'custom' ? 'block' : 'none';
+});
+const imgKeyChoice = document.getElementById('img_key_choice');
+const customImgKey = document.getElementById('custom_img_key');
+imgKeyChoice.addEventListener('change', () => {
+  customImgKey.style.display = imgKeyChoice.value === 'custom' ? 'block' : 'none';
 });
 
 form.addEventListener('submit', async (e) => {
@@ -397,6 +409,14 @@ def _available_keys():
     cfg = pipeline.load_env()
     named = sorted(k[len("ANTHROPIC_API_KEY_"):].lower()
                    for k in cfg if k.startswith("ANTHROPIC_API_KEY_") and cfg[k])
+    return ["kubko"] + [f"named:{n}" for n in named]
+
+
+def _available_image_keys():
+    """['kubko', 'named:robin', ...] - the built-in KeyAI image keys an admin can assign."""
+    cfg = pipeline.load_env()
+    named = sorted(k[len("KEYAI_API_KEY_"):].lower()
+                   for k in cfg if k.startswith("KEYAI_API_KEY_") and cfg[k])
     return ["kubko"] + [f"named:{n}" for n in named]
 
 
@@ -553,6 +573,12 @@ def mm_create():
                 nk = pipeline.load_env().get("ANTHROPIC_API_KEY_" + kc[6:].upper())
                 if nk:
                     params["custom_api_key"] = nk
+        if _rec.get("img_key"):
+            ikc = _rec["img_key"]
+            if ikc.startswith("named:"):
+                ik = pipeline.load_env().get("KEYAI_API_KEY_" + ikc[6:].upper())
+                if ik:
+                    params["image_api_key"] = ik
     _cleanup_output()
     job_id = uuid.uuid4().hex[:12]
     JOBS[job_id] = {"status": "running", "progress": 0, "warnings": [],
@@ -570,6 +596,7 @@ def users_page():
         return "Only the admin (master password) can manage users.", 403
     users = _load_users(force=True)
     keys = _available_keys()
+    ikeys = _available_image_keys()
 
     def _key_select(selected):
         opts = "".join(
@@ -578,6 +605,12 @@ def users_page():
             for k in keys)
         return opts
 
+    def _img_key_select(selected):
+        return "".join(
+            f'<option value="{k}"{" selected" if k == selected else ""}>'
+            f'{k.replace("named:", "")} (built-in)</option>'
+            for k in ikeys)
+
     rows = "".join(
         f'<div class="panel" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">'
         f'<b style="color:var(--gold)">{u}</b>'
@@ -585,6 +618,12 @@ def users_page():
         f'<input type="hidden" name="name" value="{u}">'
         f'<span class="hint">pays with:</span>'
         f'<select name="api_key" style="width:auto">{_key_select(rec.get("api_key", "kubko"))}</select>'
+        f'<button style="margin:0;padding:8px 14px">Set</button>'
+        f'</form>'
+        f'<form method="post" action="/users/setimgkey" style="margin:0;display:flex;gap:8px;align-items:center">'
+        f'<input type="hidden" name="name" value="{u}">'
+        f'<span class="hint">images with:</span>'
+        f'<select name="img_key" style="width:auto">{_img_key_select(rec.get("img_key", "kubko"))}</select>'
         f'<button style="margin:0;padding:8px 14px">Set</button>'
         f'</form>'
         f'<form method="post" action="/users/delete" style="margin:0">'
@@ -603,6 +642,8 @@ The admin master password always works. Passwords are stored hashed in the priva
 <label>Password</label><input type="text" name="password" placeholder="min 5 characters" autocomplete="off" required>
 <label>Pays with (the API key this user is locked to)</label>
 <select name="api_key">{"".join(f'<option value="{k}">{k.replace("named:", "")} (built-in)</option>' for k in keys)}</select>
+<label>Images with (the KeyAI key this user is locked to)</label>
+<select name="img_key">{"".join(f'<option value="{k}">{k.replace("named:", "")} (built-in)</option>' for k in ikeys)}</select>
 <button>Create user</button></form></div>
 {rows}</div></body></html>"""
 
@@ -621,8 +662,12 @@ def users_add():
     api_key = request.form.get("api_key") or "kubko"
     if api_key not in _available_keys():
         api_key = "kubko"
+    img_key = request.form.get("img_key") or "kubko"
+    if img_key not in _available_image_keys():
+        img_key = "kubko"
     users = dict(_load_users(force=True))
-    users[name] = {"hash": generate_password_hash(pw), "api_key": api_key}
+    users[name] = {"hash": generate_password_hash(pw), "api_key": api_key,
+                   "img_key": img_key}
     if not _save_users(users):
         return "Could not save (storage vault unreachable). Try again.", 500
     from flask import redirect
@@ -641,6 +686,24 @@ def users_setkey():
     if name not in users:
         return "No such user.", 404
     users[name] = dict(users[name], api_key=api_key)
+    if not _save_users(users):
+        return "Could not save (storage vault unreachable). Try again.", 500
+    from flask import redirect
+    return redirect("/users")
+
+
+@app.route("/users/setimgkey", methods=["POST"])
+def users_setimgkey():
+    if _auth_role() != "admin":
+        return "Admin only.", 403
+    name = (request.form.get("name") or "").strip().lower()
+    img_key = request.form.get("img_key") or "kubko"
+    if img_key not in _available_image_keys():
+        return "Unknown key.", 400
+    users = dict(_load_users(force=True))
+    if name not in users:
+        return "No such user.", 404
+    users[name] = dict(users[name], img_key=img_key)
     if not _save_users(users):
         return "Could not save (storage vault unreachable). Try again.", 500
     from flask import redirect
@@ -677,9 +740,20 @@ def index():
         key_opts = '<option value="kubko">kubko (built-in)</option>'
         key_opts += "".join(f'<option value="named:{n}">{n} (built-in)</option>' for n in named)
         key_opts += '<option value="custom">my own key (paste below)</option>'
+    if rec and rec.get("img_key"):
+        ilabel = rec["img_key"].replace("named:", "")
+        img_key_opts = f'<option value="assigned">{ilabel} (assigned by admin)</option>'
+    else:
+        icfg = pipeline.load_env()
+        inamed = sorted(k[len("KEYAI_API_KEY_"):].lower()
+                        for k in icfg if k.startswith("KEYAI_API_KEY_") and icfg[k])
+        img_key_opts = '<option value="kubko">kubko (built-in)</option>'
+        img_key_opts += "".join(f'<option value="named:{n}">{n} (built-in)</option>' for n in inamed)
+        img_key_opts += '<option value="custom">my own key (paste below)</option>'
     return (PAGE.replace("__AUTHOR_OPTIONS__", _OPTS)
                 .replace("__AUTHOR_META__", _META)
-                .replace("__KEY_OPTIONS__", key_opts))
+                .replace("__KEY_OPTIONS__", key_opts)
+                .replace("__IMG_KEY_OPTIONS__", img_key_opts))
 
 
 @app.route("/generate", methods=["POST"])
@@ -749,6 +823,26 @@ def generate():
             return jsonify({"error": f"Key '{key_choice[6:]}' is not configured on this "
                                       "server. Nothing was generated."}), 400
         params["custom_api_key"] = nk
+
+    img_choice = d.get("img_key_choice") or "kubko"
+    if _role not in ("admin", None):
+        _irec = _load_users().get(_role) or {}
+        if _irec.get("img_key"):
+            # locked to an admin-assigned image key - browser value overridden
+            img_choice = _irec["img_key"]
+    if img_choice == "custom":
+        ick = (d.get("custom_img_key") or "").strip()
+        if params["do_images"] and (len(ick) < 16 or " " in ick):
+            return jsonify({"error": "That doesn't look like a KeyAI key. "
+                                      "Nothing was generated."}), 400
+        if ick:
+            params["image_api_key"] = ick
+    elif img_choice.startswith("named:"):
+        ik = pipeline.load_env().get("KEYAI_API_KEY_" + img_choice[6:].upper())
+        if not ik:
+            return jsonify({"error": f"Image key '{img_choice[6:]}' is not configured "
+                                      "on this server. Nothing was generated."}), 400
+        params["image_api_key"] = ik
 
     _cleanup_output()
     job_id = uuid.uuid4().hex[:12]
